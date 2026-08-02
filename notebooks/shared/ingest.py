@@ -79,16 +79,25 @@ def bronze_stream(
     )
 
 
-def apply_expectations(func: Any, spec: Mapping[str, Any]) -> Any:
+def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str = "drop") -> Any:
     """Apply a spec's DLT quality expectations to a table function.
 
     Each expectation in ``spec["expectations"]`` is applied in declaration
     order so violations are reported with the manifest-provided name.
+
+    ``on_violation`` selects the DLT boundary policy (ADR-005):
+    ``"drop"`` (default) drops violating rows, while ``"retain"`` keeps them
+    and records the violation in the DLT event log — the policy used at the
+    Bronze-to-Silver boundary so raw provenance is preserved.
     """
     import dlt
 
+    if on_violation not in ("drop", "retain"):
+        raise ValueError(f"unsupported on_violation policy: {on_violation}")
+
+    decorator = dlt.expect if on_violation == "drop" else dlt.expect_or_retain
     for expectation in spec.get("expectations", []):
-        func = dlt.expect(expectation["name"], expectation["constraint"])(func)
+        func = decorator(expectation["name"], expectation["constraint"])(func)
     return func
 
 
@@ -118,6 +127,7 @@ def dlt_bronze_table(
     return apply_expectations(
         dlt.table(name=spec["name"], comment=spec.get("description", ""))(_ingest),
         spec,
+        on_violation="retain",
     )
 
 

@@ -1,0 +1,289 @@
+{
+  "metadata": {
+    "pipeline": "energy_silver",
+    "industry": "energy",
+    "version": "1.0.0",
+    "description": "Silver conformed entities for the NorthGrid Resources Energy pack. Each table reads its Bronze counterpart, normalizes string fields, enforces quality expectations, and upserts by its natural key (SCD Type 1)."
+  },
+  "schema": "silver",
+  "tables": [
+    {
+      "name": "regions",
+      "description": "Conformed operating basins and regions.",
+      "primary_key": "region_id",
+      "keys": ["region_id"],
+      "source": {
+        "table": "{catalog}.bronze.regions"
+      },
+      "conform": {
+        "region_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "country": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "region_type": [{ "rule": "trim" }, { "rule": "initcap" }]
+      },
+      "expectations": [
+        {
+          "name": "regions_region_id_not_null",
+          "constraint": "region_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "asset_types",
+      "description": "Conformed classes of physical assets.",
+      "primary_key": "asset_type_id",
+      "keys": ["asset_type_id"],
+      "source": {
+        "table": "{catalog}.bronze.asset_types"
+      },
+      "conform": {
+        "asset_type_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "asset_category": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "criticality": [{ "rule": "trim" }, { "rule": "upper" }]
+      },
+      "expectations": [
+        {
+          "name": "asset_types_asset_type_id_not_null",
+          "constraint": "asset_type_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "work_order_statuses",
+      "description": "Conformed lifecycle statuses for work orders.",
+      "primary_key": "status_code",
+      "keys": ["status_code"],
+      "source": {
+        "table": "{catalog}.bronze.work_order_statuses"
+      },
+      "conform": {
+        "status_code": [{ "rule": "trim" }, { "rule": "upper" }],
+        "status_name": [{ "rule": "trim" }, { "rule": "initcap" }]
+      },
+      "expectations": [
+        {
+          "name": "work_order_statuses_status_code_not_null",
+          "constraint": "status_code IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "employee_roles",
+      "description": "Conformed job roles held by employees.",
+      "primary_key": "role_id",
+      "keys": ["role_id"],
+      "source": {
+        "table": "{catalog}.bronze.employee_roles"
+      },
+      "conform": {
+        "role_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "department": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "shift_pattern": [{ "rule": "trim" }, { "rule": "initcap" }]
+      },
+      "expectations": [
+        {
+          "name": "employee_roles_role_id_not_null",
+          "constraint": "role_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "part_types",
+      "description": "Conformed replacement parts and components.",
+      "primary_key": "part_type_id",
+      "keys": ["part_type_id"],
+      "source": {
+        "table": "{catalog}.bronze.part_types"
+      },
+      "conform": {
+        "part_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "unit_of_measure": [{ "rule": "trim" }, { "rule": "lower" }]
+      },
+      "expectations": [
+        {
+          "name": "part_types_part_type_id_not_null",
+          "constraint": "part_type_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "customers",
+      "description": "Conformed customer entities.",
+      "primary_key": "customer_id",
+      "keys": ["customer_id"],
+      "source": {
+        "table": "{catalog}.bronze.customers"
+      },
+      "conform": {
+        "company_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "segment": [{ "rule": "trim" }, { "rule": "upper" }],
+        "credit_rating": [{ "rule": "trim" }, { "rule": "upper" }],
+        "account_status": [{ "rule": "trim" }, { "rule": "upper" }]
+      },
+      "expectations": [
+        {
+          "name": "customers_customer_id_not_null",
+          "constraint": "customer_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "locations",
+      "description": "Conformed physical sites where NorthGrid operates.",
+      "primary_key": "location_id",
+      "keys": ["location_id"],
+      "source": {
+        "table": "{catalog}.bronze.locations"
+      },
+      "conform": {
+        "site_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "facility_type": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "city": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "state": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "postal_code": [{ "rule": "trim" }],
+        "operating_status": [{ "rule": "trim" }, { "rule": "upper" }]
+      },
+      "expectations": [
+        {
+          "name": "locations_location_id_not_null",
+          "constraint": "location_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "assets",
+      "description": "Conformed physical assets tracked for operations.",
+      "primary_key": "asset_id",
+      "keys": ["asset_id"],
+      "source": {
+        "table": "{catalog}.bronze.assets"
+      },
+      "conform": {
+        "asset_name": [{ "rule": "trim" }, { "rule": "upper" }],
+        "asset_status": [{ "rule": "trim" }, { "rule": "upper" }],
+        "criticality": [{ "rule": "trim" }, { "rule": "upper" }]
+      },
+      "expectations": [
+        {
+          "name": "assets_asset_id_not_null",
+          "constraint": "asset_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "employees",
+      "description": "Conformed personnel assigned to locations and roles.",
+      "primary_key": "employee_id",
+      "keys": ["employee_id"],
+      "source": {
+        "table": "{catalog}.bronze.employees"
+      },
+      "conform": {
+        "first_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "last_name": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "email": [{ "rule": "trim" }, { "rule": "lower" }],
+        "employment_status": [{ "rule": "trim" }, { "rule": "upper" }],
+        "cost_center": [{ "rule": "trim" }, { "rule": "upper" }]
+      },
+      "expectations": [
+        {
+          "name": "employees_employee_id_not_null",
+          "constraint": "employee_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "inventory",
+      "description": "Conformed stocked replacement parts at each location.",
+      "primary_key": "item_id",
+      "keys": ["item_id"],
+      "source": {
+        "table": "{catalog}.bronze.inventory"
+      },
+      "conform": {},
+      "expectations": [
+        {
+          "name": "inventory_item_id_not_null",
+          "constraint": "item_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "work_orders",
+      "description": "Conformed maintenance and inspection work orders.",
+      "primary_key": "work_order_id",
+      "keys": ["work_order_id"],
+      "source": {
+        "table": "{catalog}.bronze.work_orders"
+      },
+      "conform": {
+        "work_order_number": [{ "rule": "trim" }],
+        "status_code": [{ "rule": "trim" }, { "rule": "upper" }],
+        "priority": [{ "rule": "trim" }, { "rule": "upper" }],
+        "work_type": [{ "rule": "trim" }, { "rule": "initcap" }]
+      },
+      "expectations": [
+        {
+          "name": "work_orders_work_order_id_not_null",
+          "constraint": "work_order_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "maintenance_events",
+      "description": "Conformed maintenance and failure events per asset.",
+      "primary_key": "event_id",
+      "keys": ["event_id"],
+      "source": {
+        "table": "{catalog}.bronze.maintenance_events"
+      },
+      "conform": {
+        "event_type": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "root_cause": [{ "rule": "trim" }, { "rule": "initcap" }]
+      },
+      "expectations": [
+        {
+          "name": "maintenance_events_event_id_not_null",
+          "constraint": "event_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "weather",
+      "description": "Conformed daily weather observations per location.",
+      "primary_key": "weather_id",
+      "keys": ["weather_id"],
+      "source": {
+        "table": "{catalog}.bronze.weather"
+      },
+      "conform": {
+        "condition": [{ "rule": "trim" }, { "rule": "initcap" }]
+      },
+      "expectations": [
+        {
+          "name": "weather_weather_id_not_null",
+          "constraint": "weather_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "iot_events",
+      "description": "Conformed high-frequency sensor telemetry from assets.",
+      "primary_key": "event_id",
+      "keys": ["event_id"],
+      "source": {
+        "table": "{catalog}.bronze.iot_events"
+      },
+      "conform": {
+        "sensor_type": [{ "rule": "trim" }, { "rule": "initcap" }],
+        "unit": [{ "rule": "trim" }, { "rule": "lower" }],
+        "is_alert": [{ "rule": "cast", "type": "boolean" }]
+      },
+      "expectations": [
+        {
+          "name": "iot_events_event_id_not_null",
+          "constraint": "event_id IS NOT NULL"
+        }
+      ]
+    }
+  ]
+}

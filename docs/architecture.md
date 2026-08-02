@@ -42,7 +42,17 @@ Bronze is ingested with Auto Loader streaming into append-only Delta tables. The
 
 - **Placeholders**: source paths and target names carry `{landing}`, `{catalog}`, `{schema}`, and `{table}` tokens resolved from environment variables (`DATABRICKS_LANDING_PATH`, `DATABRICKS_CATALOG`), so one manifest promotes unchanged across dev/qa/prod (ADR-004).
 - **Audit metadata**: every table carries `_ingested_at`, `_source_file`, and `_commit_id` via `notebooks/shared/ingest.py` (`with_audit_columns`).
+- **Quality policy**: expectations at the Bronze-to-Silver boundary use the ADR-005 **retain** policy — violating raw rows are preserved and flagged in the DLT event log, never silently dropped.
 - **Provenance**: the synthetic generator writes Hive-style `batch_date=YYYY-MM-DD` partitions that Auto Loader surfaces as a partition column, preserving per-batch lineage back to the source.
 - **Testing**: manifests are validated by pure-Python tests (`tests/test_bronze_manifest.py`) that pin the manifest to the generator pack, so no Spark runtime is required in CI.
+
+### Silver Conformed Layer
+
+Silver is conformed from Bronze in `notebooks/silver/transform_energy.py`, driven by `pipelines/energy/silver_manifest.json` — one spec per entity declaring its Bronze source, primary/SCD keys, per-column conforming rules, and quality expectations:
+
+- **Conforming rules** are a small declarative vocabulary (`trim`, `lower`, `upper`, `initcap`, `coalesce`, `cast`) applied in declaration order via `notebooks/shared/silver.py` (`apply_conform`), so column hygiene is reviewable as data (ADR-004).
+- **SCD Type 1 upsert**: each Silver table is the target of `dlt.apply_changes`, sequenced by `_ingested_at`, so reprocessing Bronze is idempotent. Rows with null keys are ignored by the upsert (`ignore_null_keys`) but remain visible in Bronze.
+- **Audit columns**: Bronze metadata is retained and `_updated_at` is added, per `docs/development.md`.
+- **Testing**: `tests/test_silver_manifest.py` pins the Silver manifest to both the Bronze manifest (every source table exists) and the generator pack (keys and conformed columns are generated), all pure Python.
 
 Decisions are recorded in [ADR-001](adr/ADR-001-medallion-architecture.md), [ADR-002](adr/ADR-002-unity-catalog.md), and [ADR-004](adr/ADR-004-lakeflow-declarative-pipelines.md).
