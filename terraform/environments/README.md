@@ -8,6 +8,10 @@ Each directory under `terraform/environments/` represents an isolated platform l
 | `qa`  | `qa_lakehouse`  | ZRS | Production-parity data, staged promotion |
 | `prod`| `prod_lakehouse`| GRS | Strictest controls, no teardown |
 
+## Structure
+
+Each target is a **thin root** that declares environment-specific variables and delegates all resource wiring to the shared [`modules/environment`](modules/environment/) wrapper module. Provider configuration and module orchestration live in the wrapper once; the three targets stay structurally identical by construction. Variable declarations remain at each root because `terraform.tfvars` binds to root-level variables.
+
 ## Environment Contract
 
 Every target exposes an identical output contract:
@@ -23,7 +27,7 @@ Every target exposes an identical output contract:
 feature branch ──> terraform plan (dev) ──> merge to main
         │                                        │
         └── apply (dev)                          ├── apply (qa)
-                                                 └── apply (prod)  [release/*]
+                                                 └── apply (prod)
 ```
 
 ## Deploying a Target

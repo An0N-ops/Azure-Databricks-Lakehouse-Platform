@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pre-commit**: Added `.pre-commit-config.yaml` and `.commitlintrc.json`; `CONTRIBUTING.md` updated with installation and local verification steps.
 - **Dependabot**: Terraform coverage expanded to `qa` and `prod`; removed `pip` ecosystem (no manifest yet).
 - **Branching model**: `CONTRIBUTING.md` aligned to trunk-based topic branches (`main` + `feat|fix|docs|chore`); removed stale Git Flow references.
+- **Python CI reliability**: Added `pyproject.toml` with Ruff configuration excluding Markdown documentation; formatted the Python samples in `docs/development.md` and `docs/security.md` so `ruff format --check` no longer fails on doc prose.
+- **Terraform environment wrapper**: Consolidated the duplicated `dev`/`qa`/`prod` roots behind a shared `terraform/environments/modules/environment` module; each target is now a thin declaration with all wiring defined once.
+- **Cross-platform line endings**: Added `.gitattributes` enforcing LF checkouts; markdownlint now ignores vendored `.terraform` and `node_modules` changelogs.
 
 ---
 

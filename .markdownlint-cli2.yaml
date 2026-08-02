@@ -36,3 +36,9 @@ config:
 
 globs:
   - '**/*.md'
+
+# Terraform provider downloads and Node packages ship their own Markdown
+# changelogs; those are not part of the platform documentation suite.
+ignores:
+  - '**/.terraform/**'
+  - '**/node_modules/**'
