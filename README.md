@@ -60,9 +60,9 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 ├── architecture/          # Platform diagram (SVG/PNG) and diagram sources
 ├── notebooks/             # Phase 3 — Medallion PySpark/SQL notebooks (bronze/silver/gold)
 ├── pipelines/             # Phase 3 — Delta Live Tables pipeline definitions
-├── sample-data/           # Phase 3 — synthetic data schemas
+├── sample-data/           # Synthetic data generator (config-driven, deterministic)
 ├── scripts/               # Phase 3+ — automation and Databricks CLI utilities
-├── tests/                 # Phase 3 — PySpark unit tests (pytest + chispa)
+├── tests/                 # Unit tests (pytest) — see sample-data/README.md
 ├── dashboards/            # Phase 4 — Databricks SQL / Power BI dashboard specs
 ├── .github/               # CI workflows, dependabot, PR/issue templates
 ├── README.md

@@ -4,10 +4,14 @@ target-version = "py311"
 line-length = 100
 
 # Ruff formats Python code blocks embedded in Markdown documentation.
-# Platform Python source lives under notebooks/, pipelines/, scripts/, and
-# tests/; Markdown examples are illustrative and excluded from formatting.
+# Platform Python source lives under sample-data/ and tests/; Markdown examples
+# are illustrative and excluded from formatting.
 exclude = [
     ".git",
     ".terraform",
     "**/*.md",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"

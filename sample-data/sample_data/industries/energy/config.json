@@ -1,0 +1,480 @@
+{
+  "metadata": {
+    "industry": "energy",
+    "company": "NorthGrid Resources",
+    "domain": "Oil & Gas / Energy",
+    "description": "Fictional oil & gas operator: customers, locations, assets, employees, inventory, work orders, maintenance, weather, and IoT telemetry. All names and values are synthetic; no real organizations or people are referenced.",
+    "generator_version": "0.1.0",
+    "default_start_date": "2024-01-01",
+    "default_end_date": "2026-07-31"
+  },
+  "entities": {
+    "regions": {
+      "description": "Operating basins and regions.",
+      "volume": 6,
+      "fields": [
+        { "name": "region_id", "type": "id", "prefix": "RGN", "padding": 2 },
+        {
+          "name": "region_name",
+          "type": "choice",
+          "values": ["Gulf of Mexico", "Permian Basin", "Gulf Coast", "North Sea", "Alberta", "Mid-Continent"]
+        },
+        {
+          "name": "country",
+          "type": "choice",
+          "values": ["United States", "United States", "United States", "United Kingdom", "Canada", "United States"]
+        },
+        {
+          "name": "region_type",
+          "type": "choice",
+          "values": ["Offshore", "Onshore", "Onshore", "Offshore", "Onshore", "Onshore"]
+        },
+        { "name": "is_active", "type": "constant", "value": true }
+      ]
+    },
+    "asset_types": {
+      "description": "Classes of physical assets the company operates.",
+      "volume": 8,
+      "fields": [
+        { "name": "asset_type_id", "type": "id", "prefix": "AST", "padding": 2 },
+        {
+          "name": "asset_type_name",
+          "type": "choice",
+          "values": [
+            "Drilling Rig",
+            "Production Well",
+            "Compressor Station",
+            "Pipeline Segment",
+            "Storage Tank",
+            "Refinery Unit",
+            "Pump Station",
+            "LNG Facility"
+          ]
+        },
+        {
+          "name": "asset_category",
+          "type": "choice",
+          "values": ["Upstream", "Upstream", "Midstream", "Midstream", "Midstream", "Downstream", "Midstream", "Downstream"]
+        },
+        { "name": "typical_lifetime_years", "type": "int_range", "min": 15, "max": 40 },
+        {
+          "name": "criticality",
+          "type": "choice",
+          "values": ["CRITICAL", "HIGH", "HIGH", "MEDIUM", "MEDIUM", "LOW"]
+        }
+      ]
+    },
+    "work_order_statuses": {
+      "description": "Allowed lifecycle statuses for work orders.",
+      "volume": 6,
+      "fields": [
+        {
+          "name": "status_code",
+          "type": "choice",
+          "values": ["OPEN", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "ON_HOLD", "CANCELLED"]
+        },
+        {
+          "name": "status_name",
+          "type": "choice",
+          "values": ["Open", "Scheduled", "In Progress", "Completed", "On Hold", "Cancelled"]
+        },
+        { "name": "is_active", "type": "constant", "value": true }
+      ]
+    },
+    "employee_roles": {
+      "description": "Job roles held by employees.",
+      "volume": 9,
+      "fields": [
+        { "name": "role_id", "type": "id", "prefix": "RLE", "padding": 2 },
+        {
+          "name": "role_name",
+          "type": "choice",
+          "values": [
+            "Driller",
+            "Production Operator",
+            "Pipeline Technician",
+            "Maintenance Engineer",
+            "Control Room Operator",
+            "Field Supervisor",
+            "HSE Inspector",
+            "Roustabout",
+            "Geoscientist"
+          ]
+        },
+        {
+          "name": "department",
+          "type": "choice",
+          "values": ["Drilling", "Production", "Operations", "Maintenance", "HSE", "Geoscience", "Operations"]
+        },
+        {
+          "name": "shift_pattern",
+          "type": "choice",
+          "values": ["Day", "Night", "Rotating 5x2", "Rotating 4x4", "Office"]
+        }
+      ]
+    },
+    "part_types": {
+      "description": "Replacement parts and components held in inventory.",
+      "volume": 10,
+      "fields": [
+        { "name": "part_type_id", "type": "id", "prefix": "PRT", "padding": 2 },
+        {
+          "name": "part_name",
+          "type": "choice",
+          "values": [
+            "Ball Valve",
+            "Centrifugal Pump Seal",
+            "Orifice Flow Meter",
+            "Pressure Gauge",
+            "Filter Element",
+            "Linear Actuator",
+            "Roller Bearing",
+            "Gasket Kit",
+            "Relief Valve",
+            "Temperature Transmitter"
+          ]
+        },
+        {
+          "name": "unit_of_measure",
+          "type": "choice",
+          "values": ["ea", "ea", "ea", "ea", "ea", "ea", "ea", "set", "ea", "ea"]
+        },
+        { "name": "lead_time_days", "type": "int_range", "min": 2, "max": 90 },
+        { "name": "unit_cost", "type": "float_range", "min": 25, "max": 12000, "round": 2 }
+      ]
+    },
+    "customers": {
+      "description": "Companies that contract or purchase from NorthGrid.",
+      "volume": 250,
+      "fields": [
+        { "name": "customer_id", "type": "id", "prefix": "CUS", "padding": 5 },
+        {
+          "name": "company_name",
+          "type": "choice",
+          "values": [
+            "Apex PetroResources",
+            "Bluepeak Energy",
+            "Cascadia Drilling Co.",
+            "Ironclad Fuels",
+            "Meridian Oil & Gas",
+            "Pinnacle Pipeline Ltd.",
+            "Redwood Refining",
+            "Silvercreek E&P",
+            "TerraNova Energy",
+            "Vantage Midstream",
+            "Westwind Petroleum",
+            "Granite Basin Energy",
+            "HarborLight Gas",
+            "Kestrel Upstream",
+            "Lakeshore Petrochem",
+            "NorthBridge Fuel Systems",
+            "Onyx Field Services",
+            "Quarry Peak Drilling",
+            "Ridgeline Storage Co.",
+            "Summit Flare Partners",
+            "Thornbrook Energy",
+            "Upland Mesa Oil",
+            "Verde Land Services",
+            "Willow Creek Compression"
+          ]
+        },
+        {
+          "name": "segment",
+          "type": "choice",
+          "values": ["Upstream", "Upstream", "Midstream", "Midstream", "Downstream"]
+        },
+        { "name": "region_id", "type": "foreign_key", "entity": "regions", "column": "region_id" },
+        {
+          "name": "credit_rating",
+          "type": "choice",
+          "values": ["AAA", "AA+", "AA", "A+", "A", "BBB", "BB", "B"]
+        },
+        { "name": "annual_contract_value", "type": "int_range", "min": 250000, "max": 40000000 },
+        { "name": "active_since", "type": "date_between", "start": "2005-01-01", "end": "2025-12-31" },
+        {
+          "name": "account_status",
+          "type": "choice",
+          "values": ["ACTIVE", "ACTIVE", "ACTIVE", "PAUSED", "TERMINATED"]
+        }
+      ]
+    },
+    "locations": {
+      "description": "Physical sites where NorthGrid operates.",
+      "volume": 400,
+      "fields": [
+        { "name": "location_id", "type": "id", "prefix": "LOC", "padding": 5 },
+        {
+          "name": "site_name",
+          "type": "choice",
+          "values": [
+            "Meridian Terminal 1",
+            "Delta Well Pad 12",
+            "Cypress Compressor Station",
+            "Bayou Storage Yard",
+            "Granite Ridge Facility",
+            "Palmer Processing Plant",
+            "Hollow Creek Well Pad",
+            "Twin Forks Terminal",
+            "Ashford Compression",
+            "Lakeview Pump Station",
+            "Sequoia Field Office",
+            "Monarch Well Pad 7",
+            "Cliffside Processing",
+            "Riverton Storage",
+            "Beacon Hill Facility",
+            "Cedar Flats Pump Station",
+            "Osprey Well Pad 3",
+            "Marble Quarry Yard",
+            "Sunset Ridge Terminal",
+            "Eagle Pass Compression"
+          ]
+        },
+        { "name": "region_id", "type": "foreign_key", "entity": "regions", "column": "region_id" },
+        {
+          "name": "facility_type",
+          "type": "choice",
+          "values": ["Well Pad", "Processing Plant", "Pipeline Station", "Terminal", "Storage Yard", "Office"]
+        },
+        {
+          "name": "city",
+          "type": "choice",
+          "values": [
+            "Aurora", "Beaconville", "Cedar Falls", "Duncan", "Everett", "Fairview",
+            "Grove City", "Harper", "Ironwood", "Juniper", "Kingston", "Liberty",
+            "Marlow", "Norbury", "Oakdale", "Pine Ridge", "Quincy", "Rosemont",
+            "Stonebridge", "Templeton", "Union", "Valemont", "Winslow", "Yellowstone"
+          ]
+        },
+        {
+          "name": "state",
+          "type": "choice",
+          "values": ["Texas", "Texas", "Louisiana", "Oklahoma", "North Dakota", "New Mexico", "Wyoming", "Kansas", "Alberta", "United Kingdom"]
+        },
+        { "name": "postal_code", "type": "string_pattern", "pattern": "#####" },
+        { "name": "latitude", "type": "float_range", "min": 25, "max": 62, "round": 4 },
+        { "name": "longitude", "type": "float_range", "min": -135, "max": -95, "round": 4 },
+        {
+          "name": "operating_status",
+          "type": "choice",
+          "values": ["OPERATIONAL", "OPERATIONAL", "OPERATIONAL", "CURTAILED", "MOTHBALLED"]
+        }
+      ]
+    },
+    "assets": {
+      "description": "Physical assets tracked for operations and maintenance.",
+      "volume": 2500,
+      "fields": [
+        { "name": "asset_id", "type": "id", "prefix": "AS", "padding": 6 },
+        { "name": "asset_type_id", "type": "foreign_key", "entity": "asset_types", "column": "asset_type_id" },
+        { "name": "customer_id", "type": "foreign_key", "entity": "customers", "column": "customer_id" },
+        { "name": "location_id", "type": "foreign_key", "entity": "locations", "column": "location_id" },
+        { "name": "asset_name", "type": "string_pattern", "pattern": "ASSET-####" },
+        { "name": "install_date", "type": "date_between", "start": "1998-01-01", "end": "2025-12-31" },
+        { "name": "commissioning_year", "type": "int_range", "min": 1998, "max": 2025 },
+        { "name": "replacement_value", "type": "float_range", "min": 50000, "max": 5000000, "round": 0 },
+        { "name": "design_capacity", "type": "float_range", "min": 50, "max": 2500, "round": 1 },
+        {
+          "name": "asset_status",
+          "type": "choice",
+          "values": ["OPERATIONAL", "OPERATIONAL", "OPERATIONAL", "MAINTENANCE", "IDLE", "DECOMMISSIONED"]
+        },
+        {
+          "name": "criticality",
+          "type": "choice",
+          "values": ["CRITICAL", "HIGH", "HIGH", "MEDIUM", "MEDIUM", "LOW"]
+        }
+      ]
+    },
+    "employees": {
+      "description": "Personnel assigned to locations and roles.",
+      "volume": 900,
+      "fields": [
+        { "name": "employee_id", "type": "id", "prefix": "EMP", "padding": 6 },
+        {
+          "name": "first_name",
+          "type": "choice",
+          "values": [
+            "Ava", "Liam", "Sofia", "Noah", "Olivia", "Ethan", "Emma", "Lucas",
+            "Mia", "Mason", "Isabella", "James", "Amelia", "Benjamin", "Harper",
+            "Alexander", "Evelyn", "Henry", "Charlotte", "Jack", "Grace", "Daniel",
+            "Chloe", "Matthew", "Zoe", "Nathan", "Ruby", "Caleb", "Alice", "Owen"
+          ]
+        },
+        {
+          "name": "last_name",
+          "type": "choice",
+          "values": [
+            "Nguyen", "Okafor", "Silva", "Kowalski", "Petrov", "Garcia", "Chen",
+            "Haddad", "Novak", "Adeyemi", "Moreau", "Jansen", "Bauer", "Lindqvist",
+            "Romano", "Fischer", "Nakamura", "Stewart", "O'Connor", "Duffy",
+            "Reyes", "Hoffman", "Schmidt", "Wong", "Mendes", "Ivanov", "Berg",
+            "Costa", "Muller", "Patel"
+          ]
+        },
+        {
+          "name": "email",
+          "type": "expression",
+          "template": "{first_name}.{last_name}@northgridresources.com"
+        },
+        { "name": "role_id", "type": "foreign_key", "entity": "employee_roles", "column": "role_id" },
+        { "name": "location_id", "type": "foreign_key", "entity": "locations", "column": "location_id" },
+        { "name": "hire_date", "type": "date_between", "start": "2000-01-01", "end": "2026-06-30" },
+        {
+          "name": "employment_status",
+          "type": "choice",
+          "values": ["ACTIVE", "ACTIVE", "ACTIVE", "ON_LEAVE", "TERMINATED"]
+        },
+        {
+          "name": "cost_center",
+          "type": "choice",
+          "values": ["OPEX-UPSTREAM", "OPEX-MIDSTREAM", "OPEX-DOWNSTREAM", "CAPEX-DRILLING", "G&A"]
+        }
+      ]
+    },
+    "inventory": {
+      "description": "Stocked replacement parts at each location.",
+      "volume": 1200,
+      "fields": [
+        { "name": "item_id", "type": "id", "prefix": "INV", "padding": 6 },
+        { "name": "location_id", "type": "foreign_key", "entity": "locations", "column": "location_id" },
+        { "name": "part_type_id", "type": "foreign_key", "entity": "part_types", "column": "part_type_id" },
+        { "name": "quantity_on_hand", "type": "int_range", "min": 0, "max": 1500 },
+        { "name": "reorder_level", "type": "int_range", "min": 10, "max": 200 },
+        { "name": "unit_cost", "type": "float_range", "min": 5, "max": 15000, "round": 2 },
+        { "name": "last_restocked", "type": "date_between", "start": "2025-01-01", "end": "2026-07-31" }
+      ]
+    },
+    "work_orders": {
+      "description": "Maintenance and inspection work orders against assets.",
+      "volume": 12000,
+      "fields": [
+        { "name": "work_order_id", "type": "id", "prefix": "WO", "padding": 6 },
+        { "name": "work_order_number", "type": "string_pattern", "pattern": "WO-####-####" },
+        { "name": "asset_id", "type": "foreign_key", "entity": "assets", "column": "asset_id" },
+        { "name": "location_id", "type": "foreign_key", "entity": "locations", "column": "location_id" },
+        { "name": "customer_id", "type": "foreign_key", "entity": "customers", "column": "customer_id" },
+        { "name": "status_code", "type": "foreign_key", "entity": "work_order_statuses", "column": "status_code" },
+        {
+          "name": "priority",
+          "type": "choice",
+          "values": ["LOW", "LOW", "MEDIUM", "MEDIUM", "HIGH", "HIGH", "CRITICAL"]
+        },
+        {
+          "name": "work_type",
+          "type": "choice",
+          "values": ["Preventive", "Preventive", "Corrective", "Corrective", "Inspection", "Emergency", "Overhaul"]
+        },
+        { "name": "opened_at", "type": "datetime_between" },
+        { "name": "planned_hours", "type": "float_range", "min": 2, "max": 120, "round": 1 },
+        {
+          "name": "actual_hours",
+          "type": "conditional",
+          "field": "status_code",
+          "cases": [
+            { "when": "COMPLETED", "spec": { "type": "float_range", "min": 1, "max": 140, "round": 1 } }
+          ],
+          "default": { "type": "constant", "value": null }
+        },
+        { "name": "scheduled_start", "type": "datetime_between" },
+        {
+          "name": "completed_at",
+          "type": "conditional",
+          "field": "status_code",
+          "cases": [
+            { "when": "COMPLETED", "spec": { "type": "datetime_between" } }
+          ],
+          "default": { "type": "constant", "value": null }
+        },
+        {
+          "name": "description",
+          "type": "expression",
+          "template": "{work_type} work on asset {asset_id} ({priority} priority)"
+        }
+      ]
+    },
+    "maintenance_events": {
+      "description": "Recorded maintenance and failure events per asset.",
+      "volume": { "rows_per_reference": "assets", "rows_per_unit": 6 },
+      "fields": [
+        { "name": "event_id", "type": "id", "prefix": "MTE", "padding": 7 },
+        { "name": "asset_id", "type": "foreign_key", "entity": "assets", "column": "asset_id" },
+        { "name": "work_order_id", "type": "foreign_key", "entity": "work_orders", "column": "work_order_id", "null_pct": 0.25 },
+        {
+          "name": "event_type",
+          "type": "choice",
+          "values": ["Scheduled Inspection", "Component Replacement", "Vibration Analysis", "Oil Analysis", "Unplanned Shutdown", "Corrosion Survey"]
+        },
+        { "name": "detected_at", "type": "datetime_between" },
+        { "name": "resolved_at", "type": "datetime_between" },
+        { "name": "downtime_hours", "type": "float_range", "min": 0.5, "max": 72, "round": 1 },
+        { "name": "maintenance_cost", "type": "float_range", "min": 500, "max": 250000, "round": 2 },
+        {
+          "name": "root_cause",
+          "type": "choice",
+          "values": ["Wear", "Corrosion", "Fatigue", "Operator Error", "Design Flaw", "Unknown"]
+        }
+      ]
+    },
+    "weather": {
+      "description": "Daily weather observations per location.",
+      "volume": { "rows_per_reference": "locations", "rows_per_unit": 365 },
+      "fields": [
+        { "name": "weather_id", "type": "id", "prefix": "WX", "padding": 8 },
+        { "name": "location_id", "type": "foreign_key", "entity": "locations", "column": "location_id" },
+        { "name": "observed_date", "type": "date_between" },
+        {
+          "name": "condition",
+          "type": "choice",
+          "values": ["Clear", "Clear", "Partly Cloudy", "Partly Cloudy", "Overcast", "Rain", "Heavy Rain", "Thunderstorm", "Snow", "Fog"]
+        },
+        { "name": "temperature_c", "type": "float_range", "min": -20, "max": 45, "round": 1 },
+        { "name": "wind_speed_kph", "type": "int_range", "min": 0, "max": 95 },
+        { "name": "precipitation_mm", "type": "float_range", "min": 0, "max": 80, "round": 1 },
+        { "name": "humidity_pct", "type": "int_range", "min": 10, "max": 100 }
+      ]
+    },
+    "iot_events": {
+      "description": "High-frequency sensor telemetry from assets.",
+      "volume": { "rows_per_reference": "assets", "rows_per_unit": 120 },
+      "fields": [
+        { "name": "event_id", "type": "id", "prefix": "IOT", "padding": 8 },
+        { "name": "asset_id", "type": "foreign_key", "entity": "assets", "column": "asset_id" },
+        {
+          "name": "sensor_type",
+          "type": "choice",
+          "values": ["Pressure", "Pressure", "Temperature", "Temperature", "Flow", "Flow", "Level", "Vibration"]
+        },
+        {
+          "name": "unit",
+          "type": "conditional",
+          "field": "sensor_type",
+          "cases": [
+            { "when": "Pressure", "spec": { "type": "constant", "value": "psi" } },
+            { "when": "Temperature", "spec": { "type": "constant", "value": "degC" } },
+            { "when": "Flow", "spec": { "type": "constant", "value": "m3/h" } },
+            { "when": "Level", "spec": { "type": "constant", "value": "%" } },
+            { "when": "Vibration", "spec": { "type": "constant", "value": "mm/s" } }
+          ]
+        },
+        {
+          "name": "reading",
+          "type": "conditional",
+          "field": "sensor_type",
+          "cases": [
+            { "when": "Pressure", "spec": { "type": "float_range", "min": 200, "max": 5000, "round": 2 } },
+            { "when": "Temperature", "spec": { "type": "float_range", "min": -20, "max": 250, "round": 2 } },
+            { "when": "Flow", "spec": { "type": "float_range", "min": 0, "max": 1200, "round": 2 } },
+            { "when": "Level", "spec": { "type": "float_range", "min": 0, "max": 100, "round": 2 } },
+            { "when": "Vibration", "spec": { "type": "float_range", "min": 0, "max": 50, "round": 2 } }
+          ]
+        },
+        { "name": "event_time", "type": "datetime_between" },
+        {
+          "name": "is_alert",
+          "type": "choice",
+          "values": ["false", "false", "false", "false", "false", "false", "false", "false", "true", "true"]
+        }
+      ]
+    }
+  }
+}
