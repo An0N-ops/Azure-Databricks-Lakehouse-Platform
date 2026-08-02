@@ -21,7 +21,7 @@ gantt
     Unity Catalog Metastore Setup    :done, p2_2, 2026-08-08, 2026-08-12
     Multi-Env Dev/QA/Prod Specs      :done, p2_3, 2026-08-10, 2026-08-15
     section Phase 3: Pipelines
-    Bronze Ingestion Framework      : p3_1, 2026-08-15, 2026-08-22
+    Bronze Ingestion Framework      :done, p3_1, 2026-08-15, 2026-08-22
     Silver Conformed Transformations : p3_2, 2026-08-20, 2026-08-28
     Gold Star Schema & DLT          : p3_3, 2026-08-25, 2026-09-02
     section Phase 4: Observability
@@ -49,7 +49,7 @@ gantt
 - [x] AzureRM provider upgraded to `~> 5.0` with regenerated lock files.
 
 ### Phase 3: Medallion Data Pipelines & Delta Live Tables (Target Phase 3)
-- [ ] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion (Oracle Fusion ERP, SFTP, REST APIs).
+- [x] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion (Oracle Fusion ERP, SFTP, REST APIs). Framework delivered: declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`); wiring to real Oracle/SFTP/REST sources remains Phase 3.
 - [ ] Silver layer conformed transformations, SCD Type 1/2 tracking, and schema validation.
 - [ ] Gold layer star schema modeling (`fact_sales`, `dim_customer_360`, `kpi_financials`).
 

@@ -58,8 +58,8 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 ├── docs/                  # Deep-dive documentation (index: docs/README.md)
 │   └── adr/               # Architecture Decision Records (ADR-001..007)
 ├── architecture/          # Platform diagram (SVG/PNG) and diagram sources
-├── notebooks/             # Phase 3 — Medallion PySpark/SQL notebooks (bronze/silver/gold)
-├── pipelines/             # Phase 3 — Delta Live Tables pipeline definitions
+├── notebooks/             # Medallion notebooks (bronze/silver/gold) + shared helpers
+├── pipelines/             # Declarative pipeline definitions (bronze_manifest.json)
 ├── sample-data/           # Synthetic data generator (config-driven, deterministic)
 ├── scripts/               # Phase 3+ — automation and Databricks CLI utilities
 ├── tests/                 # Unit tests (pytest) — see sample-data/README.md
@@ -93,7 +93,7 @@ Releases track implemented functionality. **v0.2.0 — Foundation Complete** cov
 
 - **Phase 1 (done)** — repository foundation, governance, CI workflows.
 - **Phase 2 (done)** — Terraform IaC: bootstrap, modules, Unity Catalog, `dev`/`qa`/`prod`, azurerm 5.0.
-- **Phase 3 (next)** — Medallion pipelines: Bronze ingestion, Silver DLT, Gold star schema.
+- **Phase 3 (in progress)** — Medallion pipelines: Bronze ingestion framework delivered, Silver DLT and Gold star schema next.
 - **Phase 4** — monitoring, data quality, dashboards.
 - **Phase 5** — OIDC automated deployment and production readiness.
 

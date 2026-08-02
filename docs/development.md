@@ -116,3 +116,21 @@ def test_transform_silver_customers(spark: SparkSession):
     result_df = transform_silver_customers(input_df)
     # Perform assertion checks
 ```
+
+### Bronze manifests: pure-Python tests
+
+PySpark DataFrame assertions (chispa) require a Spark runtime, which CI does not
+provision. The declarative Bronze framework avoids this by keeping every
+decision in the manifest and its validator, which are pure Python:
+
+- `notebooks/shared/bronze_manifest.py` loads, validates, and resolves
+  placeholders with no PySpark imports.
+- `tests/test_bronze_manifest.py` pins the Energy manifest to the synthetic
+  generator pack (entity coverage, primary keys) and exercises placeholder
+  resolution for dev/qa/prod variables. It runs on any Python 3.8+ with
+  `pytest` — no Spark, no chispa.
+
+Spark-only helpers (`notebooks/shared/ingest.py`) keep PySpark/DLT imports
+inside functions so they can be imported and linted without a runtime; they are
+reviewed statically and validated against Databricks in Phase 5. Add a chispa
+job to CI when Spark compute is available in the pipeline.
