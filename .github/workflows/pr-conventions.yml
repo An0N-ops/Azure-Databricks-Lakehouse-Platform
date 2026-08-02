@@ -27,7 +27,7 @@ jobs:
           configFile: .commitlintrc.json
 
       - name: Validate Pull Request Title
-        uses: amannn/action-semantic-pull-request@v5
+        uses: amannn/action-semantic-pull-request@v6
         with:
           types: |
             feat
