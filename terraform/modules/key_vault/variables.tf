@@ -41,7 +41,7 @@ variable "purge_protection_enabled" {
   default     = true
 }
 
-variable "enable_rbac_authorization" {
+variable "rbac_authorization_enabled" {
   type        = bool
   description = "Use Azure RBAC for data-plane authorization instead of legacy access policies."
   default     = true
