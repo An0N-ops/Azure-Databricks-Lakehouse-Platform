@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Terraform environment wrapper**: Consolidated the duplicated `dev`/`qa`/`prod` roots behind a shared `terraform/environments/modules/environment` module; each target is now a thin declaration with all wiring defined once.
 - **Cross-platform line endings**: Added `.gitattributes` enforcing LF checkouts; markdownlint now ignores vendored `.terraform` and `node_modules` changelogs.
 - **AzureRM provider 5.x upgrade**: Bumped `azurerm` constraint from `~> 3.90` to `~> 5.0` across all roots, the environment wrapper, and child modules; regenerated lock files to `5.0.1` and applied breaking-change fixes (`azurerm_storage_container` uses `storage_account_id`; `azurerm_key_vault` uses `rbac_authorization_enabled`).
+- **Documentation freeze (Phase 2)**: Rewrote `README.md` as a landing page (hero, architecture diagram, quick start, doc links) and added a color-scheme-aware architecture diagram (`architecture/exports/platform-architecture.svg` with PNG fallback). Added `docs/README.md` navigation index; consolidated `architecture/` READMEs; removed the duplicated Mermaid diagram, technology-stack and key-features sections; aligned `docs/security.md` with the implemented/planned posture in `SECURITY.md`; trimmed marketing prose across `docs/*`; corrected `ADR-003` and roadmap statuses.
 
 ---
 
