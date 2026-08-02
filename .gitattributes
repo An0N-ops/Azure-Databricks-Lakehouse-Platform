@@ -1,0 +1,4 @@
+# Normalize line endings to LF for all text files. Prevents cross-platform
+# churn (e.g., Windows CRLF checkouts) and keeps linting deterministic on
+# every contributor's machine.
+* text=auto eol=lf

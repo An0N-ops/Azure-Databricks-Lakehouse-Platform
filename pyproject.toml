@@ -1,0 +1,13 @@
+[tool.ruff]
+# Match the Python version used by the CI workflow and Databricks runtime.
+target-version = "py311"
+line-length = 100
+
+# Ruff formats Python code blocks embedded in Markdown documentation.
+# Platform Python source lives under notebooks/, pipelines/, scripts/, and
+# tests/; Markdown examples are illustrative and excluded from formatting.
+exclude = [
+    ".git",
+    ".terraform",
+    "**/*.md",
+]
