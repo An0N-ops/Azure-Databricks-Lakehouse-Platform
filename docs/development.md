@@ -72,14 +72,14 @@ Databricks Connect v2 allows developers to write, run, and debug PySpark code lo
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 
+
 def transform_silver_customers(raw_df: DataFrame) -> DataFrame:
     """Cleans raw customer data from Oracle Fusion ERP.
-    
+
     Applies string normalization, date formatting, and deduplication.
     """
     return (
-        raw_df
-        .filter(F.col("customer_id").isNotNull())
+        raw_df.filter(F.col("customer_id").isNotNull())
         .withColumn("first_name", F.trim(F.initcap(F.col("first_name"))))
         .withColumn("last_name", F.trim(F.initcap(F.col("last_name"))))
         .withColumn("email", F.lower(F.trim(F.col("email"))))
@@ -106,12 +106,13 @@ from chispa.dataframe_comparer import assert_df_equality
 from pyspark.sql import SparkSession
 from notebooks.silver.transform_customers import transform_silver_customers
 
+
 def test_transform_silver_customers(spark: SparkSession):
     input_data = [("101 ", "JOHN ", " John.Doe@Example.com ")]
     input_df = spark.createDataFrame(input_data, ["customer_id", "first_name", "email"])
-    
+
     expected_data = [("101", "John", "john.doe@example.com")]
-    
+
     result_df = transform_silver_customers(input_df)
     # Perform assertion checks
 ```

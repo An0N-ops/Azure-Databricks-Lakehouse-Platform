@@ -83,7 +83,9 @@ SET ROW FILTER prod_lakehouse.shared.region_filter ON (region_code);
 - **Azure Key Vault Backed Secret Scopes**: Databricks notebook code and pipeline scripts never contain plain-text credentials. All secrets are stored in Azure Key Vault and referenced via DBUtils:
 
   ```python
-  jdbc_password = dbutils.secrets.get(scope="akv-lakehouse-scope", key="oracle-jdbc-password")
+  jdbc_password = dbutils.secrets.get(
+      scope="akv-lakehouse-scope", key="oracle-jdbc-password"
+  )
   ```
 
 - **Encryption Standards**:
