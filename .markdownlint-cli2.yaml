@@ -31,6 +31,11 @@ config:
   # be resolved statically by the linter.
   MD051: false
 
+  # no-duplicate-heading (siblings only): CHANGELOG.md repeats category
+  # headings (### Added / ### Changed) across release entries.
+  MD024:
+    siblings_only: true
+
   # table-column-style: tables use mixed column alignment for readability.
   MD060: false
 

@@ -9,19 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-08-02
+
+_Foundation Complete._ The engineering foundation is finished: architecture decisions are recorded, infrastructure is fully expressed in Terraform, CI/CD is hardened, and the documentation suite is consolidated and frozen. From this release onward, versions track implemented functionality rather than documentation.
+
+### Added
+- **Architecture Decision Records**: `docs/adr/` with `ADR-001` through `ADR-007` (plus template and index) covering Medallion, Unity Catalog, Terraform (including networking known limitations), Lakeflow Declarative Pipelines, DLT, GitHub Actions, and repository design philosophy.
+- **Terraform environment wrapper**: consolidated `dev`/`qa`/`prod` wiring into a shared `terraform/environments/modules/environment` module; each target is now a thin declaration.
+- **Pre-commit & commit conventions**: `.pre-commit-config.yaml`, `.commitlintrc.json`, and a PR title/commit validation workflow.
+- **Architecture diagram**: color-scheme-aware `architecture/exports/platform-architecture.svg` (with PNG fallback); `docs/README.md` navigation index; consolidated `architecture/README.md`.
+- **Python CI reliability**: `pyproject.toml` Ruff configuration excluding Markdown documentation.
+
 ### Changed
-- **Security posture honesty**: `SECURITY.md` now documents only implemented controls; planned controls (Customer-Managed Keys, Private Link, OIDC, TFLint/Checkov) moved to a "Future Enhancements (Phase 5 Roadmap)" section.
-- **Documentation consistency**: Runtime references aligned to DBR 14.3 LTS across `README.md`, `docs/development.md`, and `docs/cost-optimization.md`.
-- **Architecture Decision Records**: Added `docs/adr/` with `ADR-001` through `ADR-007` covering Medallion, Unity Catalog, Terraform (including networking known limitations), Lakeflow Declarative Pipelines, DLT, GitHub Actions, and repository design philosophy.
-- **CI/CD hardening**: All workflows scoped with least-privilege `permissions` and `concurrency` (stale-run cancellation); `paths` filters added; new `pr-conventions.yml` validates conventional commits and PR titles.
-- **Pre-commit**: Added `.pre-commit-config.yaml` and `.commitlintrc.json`; `CONTRIBUTING.md` updated with installation and local verification steps.
+- **Security posture honesty**: `SECURITY.md` documents only implemented controls; planned controls (Customer-Managed Keys, Private Link, OIDC, TFLint/Checkov) moved to "Future Enhancements".
+- **CI/CD hardening**: least-privilege `permissions`, `concurrency` groups with stale-run cancellation, and explicit `paths` filters across all workflows.
+- **AzureRM provider 5.x**: constraint bumped to `~> 5.0` across all roots, the environment wrapper, and child modules; lock files regenerated to `5.0.1`; breaking-change fixes applied (`azurerm_storage_container` uses `storage_account_id`; `azurerm_key_vault` uses `rbac_authorization_enabled`).
+- **Documentation freeze (Phase 2)**: `README.md` rewritten as a landing page (hero, architecture diagram, quick start, documentation links); duplicated Mermaid diagram, technology-stack, and key-features sections removed; marketing prose trimmed across `docs/*`; `docs/security.md` aligned with the `SECURITY.md` posture; `ADR-003` and roadmap statuses corrected.
 - **Dependabot**: Terraform coverage expanded to `qa` and `prod`; removed `pip` ecosystem (no manifest yet).
-- **Branching model**: `CONTRIBUTING.md` aligned to trunk-based topic branches (`main` + `feat|fix|docs|chore`); removed stale Git Flow references.
-- **Python CI reliability**: Added `pyproject.toml` with Ruff configuration excluding Markdown documentation; formatted the Python samples in `docs/development.md` and `docs/security.md` so `ruff format --check` no longer fails on doc prose.
-- **Terraform environment wrapper**: Consolidated the duplicated `dev`/`qa`/`prod` roots behind a shared `terraform/environments/modules/environment` module; each target is now a thin declaration with all wiring defined once.
-- **Cross-platform line endings**: Added `.gitattributes` enforcing LF checkouts; markdownlint now ignores vendored `.terraform` and `node_modules` changelogs.
-- **AzureRM provider 5.x upgrade**: Bumped `azurerm` constraint from `~> 3.90` to `~> 5.0` across all roots, the environment wrapper, and child modules; regenerated lock files to `5.0.1` and applied breaking-change fixes (`azurerm_storage_container` uses `storage_account_id`; `azurerm_key_vault` uses `rbac_authorization_enabled`).
-- **Documentation freeze (Phase 2)**: Rewrote `README.md` as a landing page (hero, architecture diagram, quick start, doc links) and added a color-scheme-aware architecture diagram (`architecture/exports/platform-architecture.svg` with PNG fallback). Added `docs/README.md` navigation index; consolidated `architecture/` READMEs; removed the duplicated Mermaid diagram, technology-stack and key-features sections; aligned `docs/security.md` with the implemented/planned posture in `SECURITY.md`; trimmed marketing prose across `docs/*`; corrected `ADR-003` and roadmap statuses.
+- **Branching model**: `CONTRIBUTING.md` aligned to trunk-based topic branches; cross-platform LF line endings via `.gitattributes`.
+
+### Known Limitations
+- The Databricks NSG rule set for VNet-injected subnets is not yet defined (tracked in [ADR-003](docs/adr/ADR-003-terraform.md)); validated at first apply.
+- `no_public_ip = true` without Private Link; a fully private workspace requires the Phase 5 Private Link work.
+- CI validates Terraform configuration but does not plan/apply; automated deployment is Phase 5 (OIDC-based).
+- Cost guidance (Spot VMs, Photon, lifecycle policies) is documented but not yet implemented.
+
+### What's Next
+- **v0.3.0 — Terraform Infrastructure**: first end-to-end apply against a real subscription, the Databricks NSG rule set, and validation of workspace provisioning. See [`docs/project-roadmap.md`](docs/project-roadmap.md) for the release strategy.
 
 ---
 
@@ -48,3 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `terraform/bootstrap/`: Backend state storage account, container, and state lock roles.
   - `terraform/modules/`: Modular enterprise HCL specs for Resource Groups, VNet Networking (Host Public/Private subnets), ADLS Gen2 Storage, Key Vault, Databricks Premium Workspace, and Unity Catalog Metastore & Medallion Schemas.
   - `terraform/environments/`: Production-grade environment definitions for `dev`, `qa`, and `prod`.
+
+---
+
+[Unreleased]: https://github.com/An0N-ops/Azure-Databricks-Lakehouse-Platform/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/An0N-ops/Azure-Databricks-Lakehouse-Platform/releases/tag/v0.2.0

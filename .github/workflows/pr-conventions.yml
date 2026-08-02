@@ -35,7 +35,11 @@ jobs:
             docs
             style
             refactor
+            perf
             test
+            build
+            ci
             chore
+            revert
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

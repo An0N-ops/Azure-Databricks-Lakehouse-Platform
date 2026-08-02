@@ -9,6 +9,7 @@ A governed Azure Databricks Lakehouse reference platform: **Medallion storage, U
 [![Terraform](https://img.shields.io/badge/Terraform-1.7.5-844FBA.svg?logo=terraform&logoColor=white)](https://www.terraform.io/)
 [![AzureRM](https://img.shields.io/badge/azurerm-5.0-0089D6.svg?logo=terraform&logoColor=white)](https://registry.terraform.io/providers/hashicorp/azurerm/latest)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/badge/release-v0.2.0-orange.svg)](https://github.com/An0N-ops/Azure-Databricks-Lakehouse-Platform/releases)
 [![CI](https://github.com/An0N-ops/Azure-Databricks-Lakehouse-Platform/actions/workflows/terraform-ci.yml/badge.svg)](.github/workflows/terraform-ci.yml)
 
 </div>
@@ -88,11 +89,15 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 
 ## Roadmap
 
+Releases track implemented functionality. **v0.2.0 — Foundation Complete** covers Phases 1–2; everything below is upcoming implementation work.
+
 - **Phase 1 (done)** — repository foundation, governance, CI workflows.
 - **Phase 2 (done)** — Terraform IaC: bootstrap, modules, Unity Catalog, `dev`/`qa`/`prod`, azurerm 5.0.
 - **Phase 3 (next)** — Medallion pipelines: Bronze ingestion, Silver DLT, Gold star schema.
 - **Phase 4** — monitoring, data quality, dashboards.
 - **Phase 5** — OIDC automated deployment and production readiness.
+
+See [`docs/project-roadmap.md`](docs/project-roadmap.md) for the detailed plan and release strategy.
 
 ## Design Philosophy
 

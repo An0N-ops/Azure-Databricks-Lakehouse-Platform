@@ -62,3 +62,21 @@ gantt
 - [ ] GitHub Actions OIDC automated Terraform deployment pipelines (`plan` on PR, `apply` on merge).
 - [ ] Automated notebook integration test execution against Databricks staging workspace.
 - [ ] Platform operational runbooks and performance benchmarks.
+
+---
+
+## Release Strategy
+
+Every release corresponds to implemented functionality. Documentation-only releases stop at v0.2.0; milestones below are indicative and evolve as implementation progresses.
+
+| Version | Milestone | Content |
+| ------- | --------- | ------- |
+| v0.2.0 | Foundation Complete | Architecture decisions, Terraform IaC, CI/CD, consolidated documentation. *(current)* |
+| v0.3.0 | Terraform Infrastructure | First end-to-end apply; Databricks NSG rule set; workspace validation. |
+| v0.4.0 | Bronze Layer Implementation | Auto Loader ingestion for Oracle ERP, SFTP, and REST sources. |
+| v0.5.0 | Silver Layer & CDC | Conformed transformations, SCD Type 1/2, change data capture. |
+| v0.6.0 | Gold Layer & Business Models | Star-schema models and business analytics tables. |
+| v0.7.0 | Monitoring & Data Quality | System tables, DLT event logs, alerting, dashboards. |
+| v0.8.0 | CI/CD & Deployment | OIDC automated plan/apply pipelines. |
+| v0.9.0 | Performance Optimization | Cluster tuning, Photon, lifecycle and cost controls. |
+| v1.0.0 | Enterprise Lakehouse Platform | Production-ready platform. |
