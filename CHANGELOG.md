@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Synthetic Enterprise Data Generator** (`sample-data/`): a config-driven, deterministic generator with a domain-agnostic core and an Energy/Oil & Gas pack (`NorthGrid Resources`, 14 related entities). Output is CSV/JSON/Parquet with date-partitioned batches and a `manifest.json` for provenance. Covered by a pytest suite and a CI smoke run.
+- **Bronze Ingestion Framework** (Phase 3): declarative Auto Loader ingestion driven by `pipelines/energy/bronze_manifest.json` (one spec per Energy entity: landing source, CSV options, DLT quality expectations). Shared helpers in `notebooks/shared/` (pure-Python manifest loading/validation/placeholder resolution; PySpark audit columns, Auto Loader reader, and DLT table rendering) and a data-driven DLT notebook `notebooks/bronze/ingest_energy.py`. Manifests are covered by pure-Python tests in `tests/test_bronze_manifest.py`.
 
 ---
 
