@@ -86,16 +86,21 @@ def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str 
     order so violations are reported with the manifest-provided name.
 
     ``on_violation`` selects the DLT boundary policy (ADR-005):
-    ``"drop"`` (default) drops violating rows, while ``"retain"`` keeps them
-    and records the violation in the DLT event log — the policy used at the
-    Bronze-to-Silver boundary so raw provenance is preserved.
+    ``"drop"`` (default) drops violating rows, ``"retain"`` keeps them and
+    records the violation in the DLT event log (the Bronze-to-Silver policy),
+    and ``"fail"`` aborts the update (the Gold policy).
     """
     import dlt
 
-    if on_violation not in ("drop", "retain"):
+    if on_violation not in ("drop", "retain", "fail"):
         raise ValueError(f"unsupported on_violation policy: {on_violation}")
 
-    decorator = dlt.expect if on_violation == "drop" else dlt.expect_or_retain
+    if on_violation == "drop":
+        decorator = dlt.expect
+    elif on_violation == "retain":
+        decorator = dlt.expect_or_retain
+    else:
+        decorator = dlt.expect_or_fail
     for expectation in spec.get("expectations", []):
         func = decorator(expectation["name"], expectation["constraint"])(func)
     return func

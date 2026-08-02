@@ -55,4 +55,13 @@ Silver is conformed from Bronze in `notebooks/silver/transform_energy.py`, drive
 - **Audit columns**: Bronze metadata is retained and `_updated_at` is added, per `docs/development.md`.
 - **Testing**: `tests/test_silver_manifest.py` pins the Silver manifest to both the Bronze manifest (every source table exists) and the generator pack (keys and conformed columns are generated), all pure Python.
 
+### Gold Star-Schema Layer
+
+Gold is modeled as a Kimball star schema in `notebooks/gold/transform_energy.py`, driven by `pipelines/energy/gold_manifest.json` — one spec per model declaring its Silver source, kind, primary key, foreign-key references, and (for facts) a derived date key and optional aggregations:
+
+- **Dimensions**: conformed Silver entities are registered unchanged as `dim_*` tables; the manifest's foreign-key declarations make the star schema reviewable as data. `dim_date` is generated from a declared `date_range` via `notebooks/shared/gold_manifest.py` (`date_dimension_rows`), sharing the `YYYYMMDD` integer key used by the facts.
+- **Facts**: each `fact_*` table reads its Silver source and derives `date_key` (`YYYYMMDD`) from a declared timestamp/date column so it joins directly to `dim_date`. `fact_sensor_daily` demonstrates an aggregate fact: measures (`avg`, `min`, `max`, `count_true`) are collapsed to a declared grain (asset × sensor type × day).
+- **Quality policy**: the Silver-to-Gold boundary uses the ADR-005 **fail** policy — an update that violates a Gold expectation aborts the pipeline rather than publishing a broken analytics table (`notebooks/shared/gold.py`, `register_gold`).
+- **Testing**: `tests/test_gold_manifest.py` pins the Gold manifest to the Silver manifest (every source exists) and the generator pack (primary keys, FK columns, and aggregated measures are generated), and unit-tests the date dimension — all pure Python.
+
 Decisions are recorded in [ADR-001](adr/ADR-001-medallion-architecture.md), [ADR-002](adr/ADR-002-unity-catalog.md), and [ADR-004](adr/ADR-004-lakeflow-declarative-pipelines.md).
