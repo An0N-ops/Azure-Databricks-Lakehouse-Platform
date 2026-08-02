@@ -1,0 +1,17 @@
+# Global Owners
+* @An0N-ops
+
+# Architecture & Documentation
+/docs/ @An0N-ops
+/architecture/ @An0N-ops
+/README.md @An0N-ops
+
+# Infrastructure as Code (Terraform)
+/terraform/ @An0N-ops
+
+# Pipelines & Lakehouse Notebooks
+/notebooks/ @An0N-ops
+/pipelines/ @An0N-ops
+
+# Workflows & GitHub Governance
+/.github/ @An0N-ops

@@ -1,0 +1,32 @@
+name: YAML Validation
+
+on:
+  push:
+    branches: [ main, "release/*" ]
+    paths:
+      - '**.yml'
+      - '**.yaml'
+  pull_request:
+    branches: [ main, "release/*" ]
+    paths:
+      - '**.yml'
+      - '**.yaml'
+
+jobs:
+  yaml-lint:
+    name: Lint YAML Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Yamllint
+        run: pip install yamllint
+
+      - name: Run Yamllint
+        run: yamllint -c .yamllint .

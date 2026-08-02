@@ -1,0 +1,58 @@
+name: Enterprise Bug Report
+description: Report a reproducible bug or failure in pipelines, Terraform, or platform components.
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting a bug report! Please provide detailed engineering diagnostics to help us reproduce and resolve the issue efficiently.
+
+  - type: input
+    id: component
+    attributes:
+      label: Affected Platform Component
+      description: E.g., Terraform Modules, DLT Pipelines, Unity Catalog Governance, Bronze/Silver Notebooks, CI/CD Workflow.
+      placeholder: e.g., terraform/modules/unity_catalog
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: Clear and concise explanation of what the bug is.
+      placeholder: Describe expected behavior vs actual behavior...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Run terraform apply in terraform/environments/dev
+        2. Execute DLT pipeline bronze_ingestion_pipeline
+        3. See error in Databricks event log
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Logs & Stack Traces
+      description: Attach relevant Databricks event logs, PySpark error tracebacks, or Terraform CLI outputs.
+      render: shell
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Development (dev)
+        - QA / Staging (qa)
+        - Production (prod)
+        - Local Development
+    validations:
+      required: true
