@@ -11,6 +11,7 @@ they answer *why* each capability exists, not just *how* it is built.
 | Bronze Ingestion Framework | [bronze-ingestion-framework.md](bronze-ingestion-framework.md) — landing, raw ingestion, audit metadata, incremental processing. |
 | Silver Conformed Layer | [silver-conformed-layer.md](silver-conformed-layer.md) — cleaning, normalization, deduplication, stable business keys. |
 | Gold Star-Schema Layer | [gold-star-schema-layer.md](gold-star-schema-layer.md) — analytics-ready `dim_*` / `fact_*` models for BI. |
+| Databricks Asset Bundles Deployment | [deployment-bundles.md](deployment-bundles.md) — packaging, validation, and branch-driven release of the DLT pipelines. |
 
 Each brief is written domain-agnostically; the Energy/Oil & Gas pack is the
 reference implementation that demonstrates the platform. New industries

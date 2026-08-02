@@ -122,3 +122,58 @@ databricks clusters list
 # Verify Unity Catalog metastore association
 databricks metastores list
 ```
+
+---
+
+## Step 5: Deploy the DLT Pipelines with Databricks Asset Bundles
+
+The Bronze/Silver/Gold Delta Live Tables pipelines are packaged as a Databricks
+Asset Bundle in `bundle/databricks.yml` and released by the
+`Databricks Bundle CI/CD` GitHub Actions workflow. The bundle declares the three
+pipelines and three targets; catalog and landing-path values are bundle
+variables per target:
+
+| Target | Mode | Branch | Catalog | Landing root |
+| ------ | ---- | ------ | ------- | ------------ |
+| `dev` | development | feature branches | `dev_lakehouse` | `abfss://bronze@stlakehousedevelop.../landing` |
+| `qa` | production | `develop` | `qa_lakehouse` | `abfss://bronze@stlakehouseqa.../landing` |
+| `prod` | production | `main` | `prod_lakehouse` | `abfss://bronze@stlakehouseprod.../landing` |
+
+> Update the `workspace.host` placeholders and the storage-account suffix in
+> each target's `landing_path` with the values output by Terraform
+> (`databricks_workspace` URL and `storage_account_name`).
+
+### CI/CD Behavior
+
+- **Pull requests** that touch `bundle/**`, `notebooks/**`, or `pipelines/**`
+  run offline structural validation (`scripts/validate_bundle.py`) — no
+  workspace required.
+- **Workspace validation** (`databricks bundle validate --target <env>
+  --strict`) and **deploys** are gated on workspace credentials
+  (`DATABRICKS_HOST`, `DATABRICKS_TOKEN`) being configured; until Phase 5 wires
+  up OIDC, only the offline checks run.
+- **Branch-driven deploys**: merge to `main` deploys `prod`, merge to `develop`
+  deploys `qa`, and pushes to feature branches deploy `dev`.
+
+### Required GitHub Secrets
+
+| Secret | Purpose |
+| ------ | ------- |
+| `DATABRICKS_HOST` | Workspace URL, e.g. `https://adb-...azuredatabricks.net`. |
+| `DATABRICKS_TOKEN` | Databricks PAT with `CAN_MANAGE` on the pipelines. |
+| `DATABRICKS_SERVICE_PRINCIPAL` | Application ID for `run_as` on production-mode targets. |
+
+### Deploying from a Local Machine
+
+```bash
+# From the repository root; the CLI looks for bundle/databricks.yml
+export DATABRICKS_HOST="https://adb-...azuredatabricks.net"
+export DATABRICKS_TOKEN="dapi..."
+
+cd bundle
+databricks bundle validate --target dev
+databricks bundle deploy --target dev --auto-approve
+```
+
+See [`docs/briefs/deployment-bundles.md`](briefs/deployment-bundles.md) for the
+feature brief and design rationale.
