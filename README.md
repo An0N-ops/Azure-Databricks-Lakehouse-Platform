@@ -93,7 +93,7 @@ Releases track implemented functionality. **v0.2.0 — Foundation Complete** cov
 
 - **Phase 1 (done)** — repository foundation, governance, CI workflows.
 - **Phase 2 (done)** — Terraform IaC: bootstrap, modules, Unity Catalog, `dev`/`qa`/`prod`, azurerm 5.0.
-- **Phase 3 (in progress)** — Medallion pipelines: Bronze ingestion framework delivered, Silver DLT and Gold star schema next.
+- **Phase 3 (in progress)** — Medallion pipelines: Bronze ingestion and Silver DLT delivered; Gold star schema next.
 - **Phase 4** — monitoring, data quality, dashboards.
 - **Phase 5** — OIDC automated deployment and production readiness.
 

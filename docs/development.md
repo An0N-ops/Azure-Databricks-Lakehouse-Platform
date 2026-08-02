@@ -117,20 +117,24 @@ def test_transform_silver_customers(spark: SparkSession):
     # Perform assertion checks
 ```
 
-### Bronze manifests: pure-Python tests
+### Declarative manifests: pure-Python tests
 
 PySpark DataFrame assertions (chispa) require a Spark runtime, which CI does not
-provision. The declarative Bronze framework avoids this by keeping every
-decision in the manifest and its validator, which are pure Python:
+provision. The declarative Bronze and Silver frameworks avoid this by keeping
+every decision in a manifest and its validator, which are pure Python:
 
-- `notebooks/shared/bronze_manifest.py` loads, validates, and resolves
-  placeholders with no PySpark imports.
-- `tests/test_bronze_manifest.py` pins the Energy manifest to the synthetic
-  generator pack (entity coverage, primary keys) and exercises placeholder
-  resolution for dev/qa/prod variables. It runs on any Python 3.8+ with
-  `pytest` — no Spark, no chispa.
+- `notebooks/shared/bronze_manifest.py` and `notebooks/shared/silver_manifest.py`
+  load, validate, and resolve placeholders with no PySpark imports.
+- `tests/test_bronze_manifest.py` pins the Energy Bronze manifest to the
+  synthetic generator pack (entity coverage, primary keys) and exercises
+  placeholder resolution for dev/qa/prod variables.
+- `tests/test_silver_manifest.py` pins the Silver manifest to both the Bronze
+  manifest (every source table exists) and the generator pack (SCD keys and
+  conformed columns are actually generated), and validates the conforming-rule
+  vocabulary. Both run on any Python 3.8+ with `pytest` — no Spark, no chispa.
 
-Spark-only helpers (`notebooks/shared/ingest.py`) keep PySpark/DLT imports
-inside functions so they can be imported and linted without a runtime; they are
-reviewed statically and validated against Databricks in Phase 5. Add a chispa
-job to CI when Spark compute is available in the pipeline.
+Spark-only helpers (`notebooks/shared/ingest.py`, `notebooks/shared/silver.py`)
+keep PySpark/DLT imports inside functions so they can be imported and linted
+without a runtime; they are reviewed statically and validated against
+Databricks in Phase 5. Add a chispa job to CI when Spark compute is available
+in the pipeline.
