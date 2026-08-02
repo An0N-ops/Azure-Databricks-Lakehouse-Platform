@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Synthetic Enterprise Data Generator** (`sample-data/`): a config-driven, deterministic generator with a domain-agnostic core and an Energy/Oil & Gas pack (`NorthGrid Resources`, 14 related entities). Output is CSV/JSON/Parquet with date-partitioned batches and a `manifest.json` for provenance. Covered by a pytest suite and a CI smoke run.
+
 ---
 
 ## [0.2.0] - 2026-08-02

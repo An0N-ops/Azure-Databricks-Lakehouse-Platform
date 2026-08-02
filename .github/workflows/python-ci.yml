@@ -36,10 +36,33 @@ jobs:
           python-version: '3.11'
 
       - name: Install Ruff
-        run: pip install ruff
+        run: pip install ruff==0.16.1
 
       - name: Run Ruff Format Check
         run: ruff format --check .
 
       - name: Run Ruff Linter
         run: ruff check .
+
+  python-test:
+    name: Python Tests with Pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Install Pytest
+        run: pip install pytest
+
+      - name: Run Unit Tests
+        run: pytest
+
+      - name: Smoke-run the Generator
+        run: python -m sample_data generate --industry energy --scale 0.05
+        env:
+          PYTHONPATH: sample-data
