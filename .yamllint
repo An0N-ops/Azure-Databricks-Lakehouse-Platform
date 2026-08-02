@@ -1,0 +1,24 @@
+# yamllint configuration for the Azure Databricks Lakehouse Platform.
+#
+# GitHub Actions workflow files use several YAML constructs that deviate from
+# the strict yamllint defaults; the relaxations below codify those exceptions.
+---
+extends: default
+
+rules:
+  # Line length is not constrained for workflow files and docs.
+  line-length: disable
+
+  # GitHub Actions workflow files do not use a leading document separator.
+  document-start: disable
+
+  # GitHub Actions defines workflow triggers with the YAML 1.1 boolean-like
+  # key `on`. Keys are therefore exempt from the truthy check.
+  truthy:
+    check-keys: false
+
+  # GitHub Actions flow-style sequences use surrounding spaces, for example
+  # `branches: [ main, "release/*" ]`. Both padded and compact forms are valid.
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1

@@ -1,0 +1,38 @@
+# markdownlint-cli2 configuration for the Azure Databricks Lakehouse Platform
+# documentation suite.
+#
+# The documentation follows an "official vendor documentation" prose style
+# rather than rigid 80-column formatting. The rules disabled below are
+# intentionally relaxed; every other default rule remains enforced.
+config:
+  default: true
+
+  # heading-increment: README uses a `### *italic subtitle*` directly below
+  # the `# H1` title to render a hero header.
+  MD001: false
+
+  # line-length: narrative engineering documentation exceeds 80 columns by
+  # design (diagrams, inline references, and vendor terminology).
+  MD013: false
+
+  # blanks-around-headings / blanks-around-lists: compact heading and list
+  # style used throughout the documentation suite.
+  MD022: false
+  MD032: false
+
+  # inline-html: README hero banner requires a centered `<div align="center">`.
+  MD033: false
+
+  # first-line-heading: README and PR templates intentionally open with a
+  # centered `<div>` or a `##` section rather than a top-level heading.
+  MD041: false
+
+  # link-fragments: emoji-prefixed headings produce GitHub anchors that cannot
+  # be resolved statically by the linter.
+  MD051: false
+
+  # table-column-style: tables use mixed column alignment for readability.
+  MD060: false
+
+globs:
+  - '**/*.md'

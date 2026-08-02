@@ -1,0 +1,8 @@
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-lakehouse-tfstate-shared-eastus2"
+    storage_account_name = "stlakehousetfstateshared"
+    container_name       = "tfstate"
+    key                  = "qa.terraform.tfstate"
+  }
+}

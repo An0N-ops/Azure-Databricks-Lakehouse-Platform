@@ -1,0 +1,45 @@
+name: Feature Request / RFC
+description: Propose a new feature, architecture improvement, or pipeline capability.
+title: "[FEAT]: "
+labels: ["enhancement", "architecture"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose architectural enhancements, new Medallion pipelines, or infrastructure capabilities for the platform.
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement / Business Context
+      description: Is your feature request related to a problem or business limitation? Please describe.
+      placeholder: Describe the current architectural limitation or business requirement...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Architecture / Solution
+      description: Detailed description of how the proposed change will work.
+      placeholder: Outline proposed components, Delta Lake transformations, Unity Catalog schemas, or Terraform modules...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.
+
+  - type: checkboxes
+    id: impact-area
+    attributes:
+      label: Impacted Platform Layer(s)
+      options:
+        - label: Terraform Infrastructure & Azure Resources
+        - label: Unity Catalog & Governance
+        - label: Bronze / Silver / Gold Medallion Pipelines
+        - label: Delta Live Tables (DLT) Framework
+        - label: Monitoring & Observability
+        - label: CI/CD Workflows
