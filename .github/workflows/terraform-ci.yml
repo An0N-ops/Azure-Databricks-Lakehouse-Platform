@@ -2,13 +2,21 @@ name: Terraform CI
 
 on:
   push:
-    branches: [ main, "release/*" ]
+    branches: [ main ]
     paths:
       - 'terraform/**'
+      - '.github/workflows/terraform-ci.yml'
   pull_request:
-    branches: [ main, "release/*" ]
     paths:
       - 'terraform/**'
+      - '.github/workflows/terraform-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   terraform-format:
