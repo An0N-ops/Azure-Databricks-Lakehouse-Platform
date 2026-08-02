@@ -1,0 +1,216 @@
+{
+  "metadata": {
+    "pipeline": "energy_bronze",
+    "industry": "energy",
+    "version": "1.0.0",
+    "description": "Bronze Auto Loader ingestion for the NorthGrid Resources Energy pack. Tables mirror the synthetic generator entities in sample-data/sample_data/industries/energy/config.json."
+  },
+  "schema": "bronze",
+  "defaults": {
+    "source": {
+      "format": "csv",
+      "options": {
+        "header": "true",
+        "inferSchema": "true"
+      }
+    }
+  },
+  "tables": [
+    {
+      "name": "regions",
+      "description": "Operating basins and regions.",
+      "primary_key": "region_id",
+      "source": {
+        "path": "{landing}/energy/regions"
+      },
+      "expectations": [
+        {
+          "name": "regions_region_id_not_null",
+          "constraint": "region_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "asset_types",
+      "description": "Classes of physical assets the company operates.",
+      "primary_key": "asset_type_id",
+      "source": {
+        "path": "{landing}/energy/asset_types"
+      },
+      "expectations": [
+        {
+          "name": "asset_types_asset_type_id_not_null",
+          "constraint": "asset_type_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "work_order_statuses",
+      "description": "Allowed lifecycle statuses for work orders.",
+      "primary_key": "status_code",
+      "source": {
+        "path": "{landing}/energy/work_order_statuses"
+      },
+      "expectations": [
+        {
+          "name": "work_order_statuses_status_code_not_null",
+          "constraint": "status_code IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "employee_roles",
+      "description": "Job roles held by employees.",
+      "primary_key": "role_id",
+      "source": {
+        "path": "{landing}/energy/employee_roles"
+      },
+      "expectations": [
+        {
+          "name": "employee_roles_role_id_not_null",
+          "constraint": "role_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "part_types",
+      "description": "Replacement parts and components held in inventory.",
+      "primary_key": "part_type_id",
+      "source": {
+        "path": "{landing}/energy/part_types"
+      },
+      "expectations": [
+        {
+          "name": "part_types_part_type_id_not_null",
+          "constraint": "part_type_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "customers",
+      "description": "Companies that contract or purchase from NorthGrid.",
+      "primary_key": "customer_id",
+      "source": {
+        "path": "{landing}/energy/customers"
+      },
+      "expectations": [
+        {
+          "name": "customers_customer_id_not_null",
+          "constraint": "customer_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "locations",
+      "description": "Physical sites where NorthGrid operates.",
+      "primary_key": "location_id",
+      "source": {
+        "path": "{landing}/energy/locations"
+      },
+      "expectations": [
+        {
+          "name": "locations_location_id_not_null",
+          "constraint": "location_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "assets",
+      "description": "Physical assets tracked for operations and maintenance.",
+      "primary_key": "asset_id",
+      "source": {
+        "path": "{landing}/energy/assets"
+      },
+      "expectations": [
+        {
+          "name": "assets_asset_id_not_null",
+          "constraint": "asset_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "employees",
+      "description": "Personnel assigned to locations and roles.",
+      "primary_key": "employee_id",
+      "source": {
+        "path": "{landing}/energy/employees"
+      },
+      "expectations": [
+        {
+          "name": "employees_employee_id_not_null",
+          "constraint": "employee_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "inventory",
+      "description": "Stocked replacement parts at each location.",
+      "primary_key": "item_id",
+      "source": {
+        "path": "{landing}/energy/inventory"
+      },
+      "expectations": [
+        {
+          "name": "inventory_item_id_not_null",
+          "constraint": "item_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "work_orders",
+      "description": "Maintenance and inspection work orders against assets.",
+      "primary_key": "work_order_id",
+      "source": {
+        "path": "{landing}/energy/work_orders"
+      },
+      "expectations": [
+        {
+          "name": "work_orders_work_order_id_not_null",
+          "constraint": "work_order_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "maintenance_events",
+      "description": "Recorded maintenance and failure events per asset.",
+      "primary_key": "event_id",
+      "source": {
+        "path": "{landing}/energy/maintenance_events"
+      },
+      "expectations": [
+        {
+          "name": "maintenance_events_event_id_not_null",
+          "constraint": "event_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "weather",
+      "description": "Daily weather observations per location.",
+      "primary_key": "weather_id",
+      "source": {
+        "path": "{landing}/energy/weather"
+      },
+      "expectations": [
+        {
+          "name": "weather_weather_id_not_null",
+          "constraint": "weather_id IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "iot_events",
+      "description": "High-frequency sensor telemetry from assets.",
+      "primary_key": "event_id",
+      "source": {
+        "path": "{landing}/energy/iot_events"
+      },
+      "expectations": [
+        {
+          "name": "iot_events_event_id_not_null",
+          "constraint": "event_id IS NOT NULL"
+        }
+      ]
+    }
+  ]
+}

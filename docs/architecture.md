@@ -36,4 +36,13 @@ Transformations use Delta Live Tables (DLT) / Lakeflow Declarative Pipelines:
 - **Data quality expectations**: `EXPECT`, `ON VIOLATION DROP ROW`, `ON VIOLATION FAIL UPDATE` gate promotions between layers.
 - **Auto-maintenance**: DLT handles `OPTIMIZE`, Z-Ordering, and `VACUUM`.
 
+### Bronze Ingestion Framework
+
+Bronze is ingested with Auto Loader streaming into append-only Delta tables. The landing sources and quality contracts are declared as data in `pipelines/energy/bronze_manifest.json` — one table spec per entity — and rendered by the shared DLT notebook `notebooks/bronze/ingest_energy.py`:
+
+- **Placeholders**: source paths and target names carry `{landing}`, `{catalog}`, `{schema}`, and `{table}` tokens resolved from environment variables (`DATABRICKS_LANDING_PATH`, `DATABRICKS_CATALOG`), so one manifest promotes unchanged across dev/qa/prod (ADR-004).
+- **Audit metadata**: every table carries `_ingested_at`, `_source_file`, and `_commit_id` via `notebooks/shared/ingest.py` (`with_audit_columns`).
+- **Provenance**: the synthetic generator writes Hive-style `batch_date=YYYY-MM-DD` partitions that Auto Loader surfaces as a partition column, preserving per-batch lineage back to the source.
+- **Testing**: manifests are validated by pure-Python tests (`tests/test_bronze_manifest.py`) that pin the manifest to the generator pack, so no Spark runtime is required in CI.
+
 Decisions are recorded in [ADR-001](adr/ADR-001-medallion-architecture.md), [ADR-002](adr/ADR-002-unity-catalog.md), and [ADR-004](adr/ADR-004-lakeflow-declarative-pipelines.md).

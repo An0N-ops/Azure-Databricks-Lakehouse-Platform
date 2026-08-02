@@ -6,6 +6,8 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_DATA_DIR = REPO_ROOT / "sample-data"
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 if str(SAMPLE_DATA_DIR) not in sys.path:
     sys.path.insert(0, str(SAMPLE_DATA_DIR))
 
