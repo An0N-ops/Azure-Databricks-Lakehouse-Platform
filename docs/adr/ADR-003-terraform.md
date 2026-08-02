@@ -22,7 +22,7 @@ Manage all cloud infrastructure with Terraform (AzureRM + Databricks providers):
 - **Positive**: declarative review trail and drift detection via `terraform plan`.
 - **Positive**: environment parity through shared modules.
 - **Negative**: CI validates configuration but does not plan/apply (Phase 5, OIDC-based).
-- **Negative**: environment roots currently duplicate module wiring; a wrapper-module refactor is planned.
+- **Negative**: environment roots were refactored behind a shared wrapper module (`terraform/environments/modules/environment`); thin roots remain declaratively duplicated per target by design.
 
 ## Known Limitations
 

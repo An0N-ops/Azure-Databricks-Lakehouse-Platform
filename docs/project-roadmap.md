@@ -2,7 +2,7 @@
 
 ## Strategic Vision
 
-The **Azure Databricks Lakehouse Platform** roadmap outlines a multi-phase engineering trajectory designed to deliver an enterprise-grade, scalable, governed data platform.
+The platform roadmap is a 5-phase engineering trajectory. Phases 1 and 2 are complete; implementation of the remaining phases is tracked here.
 
 ---
 
@@ -17,9 +17,9 @@ gantt
     Architecture Documentation      :done, p1_2, 2026-08-02, 2026-08-04
     CI/CD Quality Workflows          :done, p1_3, 2026-08-03, 2026-08-05
     section Phase 2: Infrastructure
-    Terraform Modules Provisioning   :active, p2_1, 2026-08-05, 2026-08-10
-    Unity Catalog Metastore Setup   :active, p2_2, 2026-08-08, 2026-08-12
-    Multi-Env Dev/QA/Prod Specs     :active, p2_3, 2026-08-10, 2026-08-15
+    Terraform Modules Provisioning   :done, p2_1, 2026-08-05, 2026-08-10
+    Unity Catalog Metastore Setup    :done, p2_2, 2026-08-08, 2026-08-12
+    Multi-Env Dev/QA/Prod Specs      :done, p2_3, 2026-08-10, 2026-08-15
     section Phase 3: Pipelines
     Bronze Ingestion Framework      : p3_1, 2026-08-15, 2026-08-22
     Silver Conformed Transformations : p3_2, 2026-08-20, 2026-08-28
@@ -35,17 +35,18 @@ gantt
 
 ## Detailed Milestone Deliverables
 
-### Phase 1: Foundation & Governance (Completed Baseline)
+### Phase 1: Foundation & Governance (Completed)
 - [x] Repository directory structure according to enterprise standards.
-- [x] Comprehensive documentation suite (`architecture.md`, `deployment.md`, `development.md`, etc.).
+- [x] Documentation suite (`architecture.md`, `deployment.md`, `development.md`, etc.).
 - [x] Governance policies (`SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `LICENSE`).
 - [x] GitHub CI workflows for Markdown, Python (Ruff), YAML, Gitleaks Secret Scanning, and Terraform validation.
 
-### Phase 2: Modular Infrastructure as Code (Terraform) (In Progress / Completed)
+### Phase 2: Modular Infrastructure as Code (Terraform) (Completed)
 - [x] One-time Azure remote state bootstrap module.
 - [x] Reusable Terraform modules: `resource_group`, `networking`, `storage`, `key_vault`, `databricks_workspace`, `unity_catalog`.
-- [x] Environment target configurations for `dev`, `qa`, and `prod`.
+- [x] Shared environment wrapper module with thin `dev`, `qa`, and `prod` roots.
 - [x] Unity Catalog metastore, Access Connector (Managed Identity), storage credentials, external locations, catalogs, and medallion schemas.
+- [x] AzureRM provider upgraded to `~> 5.0` with regenerated lock files.
 
 ### Phase 3: Medallion Data Pipelines & Delta Live Tables (Target Phase 3)
 - [ ] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion (Oracle Fusion ERP, SFTP, REST APIs).

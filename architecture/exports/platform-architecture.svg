@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 900" role="img" aria-label="Azure Databricks Lakehouse Platform architecture: source systems, ingestion, medallion lakehouse, governance, monitoring, and consumers">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --zone-fill: #f6f8fa;
+      --zone-stroke: #d0d7de;
+      --box-fill: #ffffff;
+      --box-stroke: #818b98;
+      --text: #1f2328;
+      --muted: #57606a;
+      --title: #59636e;
+      --accent: #0969da;
+      --arrow: #6e7781;
+      --bronze-h: #a5652f;
+      --silver-h: #6e7681;
+      --gold-h: #9c7a1f;
+      --bronze-f: #f6e7d8;
+      --silver-f: #eaeef2;
+      --gold-f: #fbf1d3;
+      --on-color: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --zone-fill: #161b22;
+        --zone-stroke: #30363d;
+        --box-fill: #0d1117;
+        --box-stroke: #484f58;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --title: #8b949e;
+        --accent: #58a6ff;
+        --arrow: #6e7681;
+        --bronze-f: #3d2313;
+        --silver-f: #1f2429;
+        --gold-f: #3d2c00;
+      }
+    }
+    .zone { fill: var(--zone-fill); stroke: var(--zone-stroke); stroke-width: 1.2; stroke-dasharray: 6 4; }
+    .ztitle { font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; fill: var(--title); }
+    .box { fill: var(--box-fill); stroke: var(--box-stroke); stroke-width: 1.2; }
+    .btitle { font-size: 14px; font-weight: 700; fill: var(--text); }
+    .bsub { font-size: 11px; fill: var(--muted); }
+    .medb { fill: var(--bronze-h); }
+    .meds { fill: var(--silver-h); }
+    .medg { fill: var(--gold-h); }
+    .medbf { fill: var(--bronze-f); }
+    .medsf { fill: var(--silver-f); }
+    .medgf { fill: var(--gold-f); }
+    .medt { font-size: 12px; font-weight: 700; fill: var(--on-color); }
+    .medbody { font-size: 11px; fill: var(--text); }
+    .chip { font-size: 11px; fill: var(--text); }
+    .arrow { stroke: var(--arrow); stroke-width: 1.6; fill: none; }
+    .arrowdash { stroke: var(--arrow); stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .alabel { font-size: 10.5px; fill: var(--muted); }
+  </style>
+
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--arrow)"/>
+    </marker>
+    <marker id="ahd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--arrow)"/>
+    </marker>
+  </defs>
+
+  <rect width="1360" height="900" fill="var(--bg)"/>
+  <text x="680" y="42" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">Azure Databricks Lakehouse Platform — Architecture</text>
+
+  <!-- ===================== ZONE: SOURCE SYSTEMS ===================== -->
+  <rect class="zone" x="50" y="90" width="360" height="290" rx="12"/>
+  <text class="ztitle" x="70" y="112">SOURCE SYSTEMS</text>
+
+  <rect class="box" x="70" y="120" width="320" height="46" rx="8"/>
+  <text class="btitle" x="230" y="137" text-anchor="middle">Oracle ERP</text>
+  <text class="bsub" x="230" y="154" text-anchor="middle">Fusion Cloud · Database 19c</text>
+
+  <rect class="box" x="70" y="180" width="320" height="46" rx="8"/>
+  <text class="btitle" x="230" y="197" text-anchor="middle">REST APIs</text>
+  <text class="bsub" x="230" y="214" text-anchor="middle">finance · supply chain</text>
+
+  <rect class="box" x="70" y="240" width="320" height="46" rx="8"/>
+  <text class="btitle" x="230" y="257" text-anchor="middle">SFTP</text>
+  <text class="bsub" x="230" y="274" text-anchor="middle">CSV / JSON flat-file drops</text>
+
+  <rect class="box" x="70" y="300" width="320" height="46" rx="8"/>
+  <text class="btitle" x="230" y="317" text-anchor="middle">Azure Event Hubs</text>
+  <text class="bsub" x="230" y="334" text-anchor="middle">real-time telemetry</text>
+
+  <!-- ===================== ZONE: INGESTION ===================== -->
+  <rect class="zone" x="460" y="90" width="340" height="290" rx="12"/>
+  <text class="ztitle" x="480" y="112">INGESTION</text>
+
+  <rect class="box" x="480" y="150" width="300" height="52" rx="8"/>
+  <text class="btitle" x="630" y="170" text-anchor="middle">Azure Data Factory</text>
+  <text class="bsub" x="630" y="188" text-anchor="middle">CDC · scheduled pipelines</text>
+
+  <rect class="box" x="480" y="228" width="300" height="52" rx="8"/>
+  <text class="btitle" x="630" y="248" text-anchor="middle">Databricks Auto Loader</text>
+  <text class="bsub" x="630" y="266" text-anchor="middle">cloudFiles · schema drift</text>
+
+  <!-- ===================== ZONE: MEDALLION LAKEHOUSE ===================== -->
+  <rect class="zone" x="850" y="90" width="460" height="290" rx="12"/>
+  <text class="ztitle" x="870" y="112">ADLS GEN2 · DELTA LAKE MEDALLION</text>
+
+  <rect class="medb" x="870" y="150" width="130" height="26" rx="6"/>
+  <text class="medt" x="935" y="167" text-anchor="middle">BRONZE</text>
+  <rect class="medbf" x="870" y="176" width="130" height="92" rx="6"/>
+  <text class="medbody" x="935" y="198" text-anchor="middle">raw</text>
+  <text class="medbody" x="935" y="214" text-anchor="middle">raw_oracle_orders</text>
+  <text class="medbody" x="935" y="230" text-anchor="middle">raw_sftp_financials</text>
+
+  <rect class="meds" x="1015" y="150" width="130" height="26" rx="6"/>
+  <text class="medt" x="1080" y="167" text-anchor="middle">SILVER</text>
+  <rect class="medsf" x="1015" y="176" width="130" height="92" rx="6"/>
+  <text class="medbody" x="1080" y="198" text-anchor="middle">cleansed</text>
+  <text class="medbody" x="1080" y="214" text-anchor="middle">dim_customer</text>
+  <text class="medbody" x="1080" y="230" text-anchor="middle">fact_orders</text>
+
+  <rect class="medg" x="1160" y="150" width="130" height="26" rx="6"/>
+  <text class="medt" x="1225" y="167" text-anchor="middle">GOLD</text>
+  <rect class="medgf" x="1160" y="176" width="130" height="92" rx="6"/>
+  <text class="medbody" x="1225" y="198" text-anchor="middle">analytics</text>
+  <text class="medbody" x="1225" y="214" text-anchor="middle">fact_sales</text>
+  <text class="medbody" x="1225" y="230" text-anchor="middle">dim_customer_360</text>
+
+  <rect class="box" x="870" y="290" width="420" height="60" rx="8"/>
+  <text class="btitle" x="1080" y="310" text-anchor="middle">Lakeflow Declarative Pipelines · Delta Live Tables</text>
+  <text class="bsub" x="1080" y="328" text-anchor="middle">expectations · schema evolution · SCD Type 1/2</text>
+
+  <!-- ===================== ZONE: GOVERNANCE ===================== -->
+  <rect class="zone" x="850" y="440" width="460" height="220" rx="12"/>
+  <text class="ztitle" x="870" y="462">GOVERNANCE</text>
+
+  <rect class="box" x="880" y="480" width="430" height="150" rx="8"/>
+  <text class="btitle" x="1095" y="504" text-anchor="middle">Unity Catalog</text>
+  <text class="bsub" x="1095" y="524" text-anchor="middle">catalog.schema.table · 3-level namespace</text>
+  <text class="bsub" x="1095" y="540" text-anchor="middle">external locations · storage credentials</text>
+  <text class="chip" x="1095" y="584" text-anchor="middle">Azure RBAC · Managed Identity · Azure Key Vault</text>
+  <rect x="900" y="562" width="390" height="1" fill="var(--box-stroke)" opacity="0.5"/>
+  <text class="bsub" x="1095" y="600" text-anchor="middle">secret scopes · no embedded credentials</text>
+
+  <!-- ===================== ZONE: MONITORING ===================== -->
+  <rect class="zone" x="50" y="440" width="760" height="220" rx="12"/>
+  <text class="ztitle" x="70" y="462">MONITORING &amp; OBSERVABILITY</text>
+
+  <rect class="box" x="70" y="480" width="350" height="52" rx="8"/>
+  <text class="btitle" x="245" y="500" text-anchor="middle">Unity Catalog System Tables</text>
+  <text class="bsub" x="245" y="518" text-anchor="middle">billing · access audit · compute</text>
+
+  <rect class="box" x="440" y="480" width="350" height="52" rx="8"/>
+  <text class="btitle" x="615" y="500" text-anchor="middle">DLT Event Logs</text>
+  <text class="bsub" x="615" y="518" text-anchor="middle">data quality · expectations</text>
+
+  <rect class="box" x="70" y="548" width="720" height="52" rx="8"/>
+  <text class="btitle" x="430" y="568" text-anchor="middle">Azure Monitor / Log Analytics</text>
+  <text class="bsub" x="430" y="586" text-anchor="middle">alerts · dashboards · retention</text>
+
+  <!-- ===================== ZONE: CONSUMERS ===================== -->
+  <rect class="zone" x="50" y="700" width="1260" height="170" rx="12"/>
+  <text class="ztitle" x="70" y="722">CONSUMERS</text>
+
+  <rect class="box" x="70" y="756" width="580" height="86" rx="8"/>
+  <text class="btitle" x="360" y="786" text-anchor="middle">Dashboards</text>
+  <text class="bsub" x="360" y="806" text-anchor="middle">Power BI · Databricks SQL Serverless · Ops</text>
+
+  <rect class="box" x="690" y="756" width="590" height="86" rx="8"/>
+  <text class="btitle" x="985" y="786" text-anchor="middle">Consumers</text>
+  <text class="bsub" x="985" y="806" text-anchor="middle">Finance · Supply Chain · Sales · Data Science / ML</text>
+
+  <!-- ===================== ARROWS ===================== -->
+  <!-- Sources -> Ingestion -->
+  <path class="arrow" marker-end="url(#ah)" d="M 390 143 L 478 172"/>
+  <text class="alabel" x="398" y="137">CDC / JDBC</text>
+
+  <path class="arrow" marker-end="url(#ah)" d="M 390 203 L 478 246"/>
+  <path class="arrow" marker-end="url(#ah)" d="M 390 263 L 478 254"/>
+  <text class="alabel" x="398" y="226">files</text>
+
+  <path class="arrow" marker-end="url(#ah)" d="M 390 323 L 478 254"/>
+  <text class="alabel" x="398" y="296">streaming</text>
+
+  <!-- Ingestion -> Bronze -->
+  <path class="arrow" marker-end="url(#ah)" d="M 780 176 L 868 198"/>
+  <path class="arrow" marker-end="url(#ah)" d="M 780 254 L 868 228"/>
+
+  <!-- Bronze -> Silver -> Gold (Lakeflow / DLT) -->
+  <path class="arrow" marker-end="url(#ah)" d="M 1000 209 L 1013 209"/>
+  <path class="arrow" marker-end="url(#ah)" d="M 1145 209 L 1158 209"/>
+  <text class="alabel" x="1082" y="196" text-anchor="middle">Lakeflow / DLT</text>
+
+  <!-- Lakehouse -> Governance -->
+  <path class="arrowdash" marker-end="url(#ahd)" d="M 1030 380 L 1030 478"/>
+  <text class="alabel" x="1040" y="432" text-anchor="start">governs</text>
+
+  <!-- Lakehouse -> Monitoring -->
+  <path class="arrowdash" marker-end="url(#ahd)" d="M 850 380 L 810 478"/>
+  <text class="alabel" x="832" y="432" text-anchor="end">telemetry</text>
+
+  <!-- Gold -> Consumers -->
+  <path class="arrow" marker-end="url(#ah)" d="M 1250 268 L 1335 268 L 1335 799 L 1282 799"/>
+  <text class="alabel" x="1258" y="530">analytics</text>
+</svg>

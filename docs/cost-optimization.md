@@ -2,7 +2,7 @@
 
 ## Architectural FinOps Principles
 
-The **Azure Databricks Lakehouse Platform** incorporates automated financial optimization policies across compute, storage, and serverless infrastructure to ensure maximum performance per dollar spent.
+Cost controls are applied across compute, storage, and serverless infrastructure. The patterns below are guidance for Phase 3 cluster and pipeline definitions, not yet implemented in Terraform.
 
 ---
 

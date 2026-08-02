@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Azure Databricks Lakehouse Platform** implements a unified observability framework combining Databricks System Tables, Azure Log Analytics, Delta Live Tables (DLT) Event Logs, and Data Quality Metrics to ensure operational visibility, cost control, and data reliability.
+Observability combines Databricks System Tables, Delta Live Tables (DLT) event logs, and Azure Log Analytics for operational visibility, cost control, and data reliability. Queries below assume system tables are enabled in the workspace.
 
 ---
 
