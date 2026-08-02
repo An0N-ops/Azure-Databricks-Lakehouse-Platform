@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.90"
+      version = "~> 5.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -67,6 +67,6 @@ resource "azurerm_storage_account" "tfstate" {
 
 resource "azurerm_storage_container" "tfstate" {
   name                  = "tfstate"
-  storage_account_name  = azurerm_storage_account.tfstate.name
+  storage_account_id    = azurerm_storage_account.tfstate.id
   container_access_type = "private"
 }

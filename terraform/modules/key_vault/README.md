@@ -8,7 +8,7 @@ Provisions a hardened **Azure Key Vault** that serves as the centralized secret 
 
 | Decision | Rationale |
 | -------- | --------- |
-| RBAC Authorization (`enable_rbac_authorization`) | Replaces legacy access policies with Azure RBAC, aligning with the platform's zero-trust identity model. |
+| RBAC Authorization (`rbac_authorization_enabled`) | Replaces legacy access policies with Azure RBAC, aligning with the platform's zero-trust identity model. |
 | Purge Protection + Soft Delete (90d) | Prevents permanent destruction of credentials; required by most enterprise compliance programs. |
 | Random Name Suffix | Key Vault names are globally unique and capped at 24 characters; a 4-char suffix guarantees a valid, collision-free name. |
 

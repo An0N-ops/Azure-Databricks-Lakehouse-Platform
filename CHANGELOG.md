@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Python CI reliability**: Added `pyproject.toml` with Ruff configuration excluding Markdown documentation; formatted the Python samples in `docs/development.md` and `docs/security.md` so `ruff format --check` no longer fails on doc prose.
 - **Terraform environment wrapper**: Consolidated the duplicated `dev`/`qa`/`prod` roots behind a shared `terraform/environments/modules/environment` module; each target is now a thin declaration with all wiring defined once.
 - **Cross-platform line endings**: Added `.gitattributes` enforcing LF checkouts; markdownlint now ignores vendored `.terraform` and `node_modules` changelogs.
+- **AzureRM provider 5.x upgrade**: Bumped `azurerm` constraint from `~> 3.90` to `~> 5.0` across all roots, the environment wrapper, and child modules; regenerated lock files to `5.0.1` and applied breaking-change fixes (`azurerm_storage_container` uses `storage_account_id`; `azurerm_key_vault` uses `rbac_authorization_enabled`).
 
 ---
 
