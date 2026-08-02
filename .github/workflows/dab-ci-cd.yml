@@ -1,0 +1,103 @@
+name: Databricks Bundle CI/CD
+
+on:
+  push:
+    branches: [ '**' ]
+    paths:
+      - 'bundle/**'
+      - 'notebooks/**'
+      - 'pipelines/**'
+      - 'scripts/validate_bundle.py'
+      - '.github/workflows/dab-ci-cd.yml'
+  pull_request:
+    paths:
+      - 'bundle/**'
+      - 'notebooks/**'
+      - 'pipelines/**'
+      - 'scripts/validate_bundle.py'
+      - '.github/workflows/dab-ci-cd.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  DATABRICKS_SERVICE_PRINCIPAL: ${{ secrets.DATABRICKS_SERVICE_PRINCIPAL }}
+
+jobs:
+  validate-bundle:
+    name: Validate Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Install Bundle Validator Dependencies
+        run: pip install pyyaml
+
+      - name: Validate Bundle Structure
+        run: python scripts/validate_bundle.py --bundle .
+
+      # Workspace-aware validation needs live credentials (Phase 5 / OIDC).
+      # Until DATABRICKS_HOST is configured this step is skipped and the
+      # structural validation above is the gate.
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Validate Bundle Against Workspace
+        if: ${{ env.DATABRICKS_HOST != '' }}
+        working-directory: bundle
+        run: |
+          set -euo pipefail
+          for target in dev qa prod; do
+            echo "==> validating target: $target"
+            databricks bundle validate --target "$target" --strict \
+              --var service_principal="${DATABRICKS_SERVICE_PRINCIPAL}"
+          done
+
+  deploy-bundle:
+    name: Deploy Bundle
+    needs: validate-bundle
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # Branch -> environment mapping: main deploys prod, develop deploys qa,
+      # and feature branches deploy the dev target.
+      - name: Resolve Deployment Target
+        id: target
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            main) target="prod" ;;
+            develop) target="qa" ;;
+            *) target="dev" ;;
+          esac
+          echo "target=${target}" >> "${GITHUB_OUTPUT}"
+
+      # Deploys are gated on workspace credentials being configured (Phase 5).
+      - name: Deploy Bundle to ${{ steps.target.outputs.target }}
+        if: ${{ env.DATABRICKS_HOST != '' }}
+        working-directory: bundle
+        run: |
+          set -euo pipefail
+          databricks bundle validate --target "${TARGET}" --strict \
+            --var service_principal="${DATABRICKS_SERVICE_PRINCIPAL}"
+          databricks bundle deploy --target "${TARGET}" --auto-approve \
+            --var service_principal="${DATABRICKS_SERVICE_PRINCIPAL}"
+        env:
+          TARGET: ${{ steps.target.outputs.target }}
