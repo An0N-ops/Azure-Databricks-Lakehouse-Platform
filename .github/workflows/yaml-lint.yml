@@ -2,15 +2,25 @@ name: YAML Validation
 
 on:
   push:
-    branches: [ main, "release/*" ]
+    branches: [ main ]
     paths:
       - '**.yml'
       - '**.yaml'
+      - '.yamllint'
+      - '.github/workflows/yaml-lint.yml'
   pull_request:
-    branches: [ main, "release/*" ]
     paths:
       - '**.yml'
       - '**.yaml'
+      - '.yamllint'
+      - '.github/workflows/yaml-lint.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   yaml-lint:

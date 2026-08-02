@@ -32,7 +32,7 @@ pip install ruff pytest chispa databricks-connect pyyaml
 Databricks Connect v2 allows developers to write, run, and debug PySpark code locally while executing Spark computations against a Databricks compute cluster in Azure.
 
 ### Setup Steps
-1. Ensure your Databricks cluster is running Databricks Runtime (DBR) 13.3 LTS or higher.
+1. Ensure your Databricks cluster is running Databricks Runtime (DBR) 14.3 LTS or higher.
 2. Obtain a Personal Access Token (PAT) or use Azure CLI authentication.
 3. Configure your local connection environment variables:
 

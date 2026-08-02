@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+- **Security posture honesty**: `SECURITY.md` now documents only implemented controls; planned controls (Customer-Managed Keys, Private Link, OIDC, TFLint/Checkov) moved to a "Future Enhancements (Phase 5 Roadmap)" section.
+- **Documentation consistency**: Runtime references aligned to DBR 14.3 LTS across `README.md`, `docs/development.md`, and `docs/cost-optimization.md`.
+- **Architecture Decision Records**: Added `docs/adr/` with `ADR-001` through `ADR-007` covering Medallion, Unity Catalog, Terraform (including networking known limitations), Lakeflow Declarative Pipelines, DLT, GitHub Actions, and repository design philosophy.
+- **CI/CD hardening**: All workflows scoped with least-privilege `permissions` and `concurrency` (stale-run cancellation); `paths` filters added; new `pr-conventions.yml` validates conventional commits and PR titles.
+- **Pre-commit**: Added `.pre-commit-config.yaml` and `.commitlintrc.json`; `CONTRIBUTING.md` updated with installation and local verification steps.
+- **Dependabot**: Terraform coverage expanded to `qa` and `prod`; removed `pip` ecosystem (no manifest yet).
+- **Branching model**: `CONTRIBUTING.md` aligned to trunk-based topic branches (`main` + `feat|fix|docs|chore`); removed stale Git Flow references.
+
+---
+
 ## [0.1.0] - 2026-08-02
 
 ### Added
