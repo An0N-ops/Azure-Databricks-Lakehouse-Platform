@@ -13,7 +13,7 @@
 
 ---
 
-[Key Features](#-key-features) • [Architecture](#-platform-architecture) • [Directory Structure](#-repository-structure) • [Terraform Setup](#-infrastructure-as-code) • [Deployment](#-deployment-guide) • [Roadmap](#-project-roadmap) • [Documentation](docs/)
+[Key Features](#-key-features) • [Architecture](#-platform-architecture) • [Directory Structure](#-repository-structure) • [Terraform Setup](#-infrastructure-as-code) • [Deployment](#-deployment-guide) • [Design Philosophy](#-design-philosophy) • [Roadmap](#-project-roadmap) • [Documentation](docs/)
 
 </div>
 
@@ -120,7 +120,7 @@ flowchart TD
 | Feature Area | Implementation Standards | Reference Doc |
 | ------------ | ------------------------ | ------------- |
 | **Infrastructure as Code** | Modular HCL with Terraform 1.7+, remote state locking on Azure Storage, multi-environment (`dev`/`qa`/`prod`) segregation. | [`deployment.md`](docs/deployment.md) |
-| **Data Governance** | Databricks Unity Catalog 3-level namespace (`catalog.schema.table`), Managed Identities, dynamic column masking, row-level filters. | [`security.md`](docs/security.md) |
+| **Data Governance** | Databricks Unity Catalog 3-level namespace (`catalog.schema.table`) with managed-identity credential access. | [`security.md`](docs/security.md) |
 | **Pipeline Framework** | Declarative Delta Live Tables (DLT) with PySpark/SQL, Auto Loader schema evolution, SCD Type 1/2 tracking. | [`architecture.md`](docs/architecture.md) |
 | **Data Quality Enforcement** | DLT `@dlt.expect` quality contracts (`EXPECT`, `DROP ROW`, `FAIL UPDATE`) with event log tracking. | [`monitoring.md`](docs/monitoring.md) |
 | **Observability & FinOps** | Unity Catalog System Tables (`system.billing`, `system.access`), Azure Log Analytics, cluster auto-scaling, Spot VMs. | [`cost-optimization.md`](docs/cost-optimization.md) |
@@ -136,7 +136,7 @@ flowchart TD
 - **Governance**: Databricks Unity Catalog
 - **Orchestration**: Azure Data Factory (ADF) & Delta Live Tables (DLT)
 - **Infrastructure as Code**: Terraform (AzureRM Provider, Databricks Provider)
-- **CI/CD**: GitHub Actions & Azure OIDC Federated Credentials
+- **CI/CD**: GitHub Actions (Azure OIDC Federated Credentials planned for Phase 5)
 - **Languages**: PySpark (Python 3.11), SQL, HCL, YAML, Bash
 
 ---
@@ -158,6 +158,7 @@ Azure-Databricks-Lakehouse-Platform/
 ├── dashboards/                  # Databricks SQL & Power BI Dashboard Specs
 ├── docs/                        # Deep-Dive Architecture & Operations Documentation
 │   ├── architecture.md          # End-to-End Reference Architecture Specification
+│   ├── adr/                     # Architecture Decision Records (ADR-001..007)
 │   ├── deployment.md            # Multi-Environment Deployment & Setup Guide
 │   ├── development.md           # Developer Guide, PySpark Standards & Databricks Connect
 │   ├── project-roadmap.md       # Strategic 5-Phase Engineering Roadmap
@@ -225,6 +226,18 @@ The platform follows a disciplined 5-Phase engineering lifecycle:
 - [ ] **Phase 5: Automated CI/CD Deployment** (Azure OIDC GitHub Actions Deployment & Automated Testing)
 
 For detailed milestone breakdown, see [`docs/project-roadmap.md`](docs/project-roadmap.md).
+
+---
+
+## 🧭 Design Philosophy
+
+This is a governed-first lakehouse, not a generic data template. The full decision record is in [ADR-007](docs/adr/ADR-007-repository-design-philosophy.md).
+
+- **Governance before pipelines** — Unity Catalog and identity are provisioned before any transformation exists.
+- **Declarative and reviewable** — every environment is a code artifact; changes land via pull requests with checks.
+- **Honest about scope** — documented controls are only those implemented; planned work lives in the roadmap, not in prose.
+- **Medallion by default, with an escape hatch** — layered Bronze/Silver/Gold via DLT, plus plain PySpark/ADF where declarative tooling adds no value.
+- **When NOT to use this architecture**: single-copy real-time serving, non-Azure deployments, or teams without the operational capacity for a governed lakehouse.
 
 ---
 
