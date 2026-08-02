@@ -51,7 +51,7 @@ gantt
 ### Phase 3: Medallion Data Pipelines & Delta Live Tables (Target Phase 3)
 - [x] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion (Oracle Fusion ERP, SFTP, REST APIs). Framework delivered: declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`); wiring to real Oracle/SFTP/REST sources remains Phase 3.
 - [x] Silver layer conformed transformations, SCD Type 1/2 tracking, and schema validation. Framework delivered: declarative Silver manifest (`pipelines/energy/silver_manifest.json`), conforming helpers (`notebooks/shared/silver.py`), and a data-driven DLT notebook (`notebooks/silver/transform_energy.py`) using SCD Type 1 upserts; SCD Type 2 tracking remains Phase 3.
-- [ ] Gold layer star schema modeling (`fact_sales`, `dim_customer_360`, `kpi_financials`).
+- [x] Gold layer star schema modeling (`fact_sales`, `dim_customer_360`, `kpi_financials`). Framework delivered: declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with Kimball dimensions, a generated date dimension, and facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); and a data-driven DLT notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations. ABI dashboards and SQL Serverless models remain Phase 4.
 
 ### Phase 4: Monitoring, Observability & Data Quality (Target Phase 4)
 - [ ] Databricks System Tables queries for billing, cluster performance, and audit tracking.

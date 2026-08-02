@@ -1,0 +1,287 @@
+{
+  "metadata": {
+    "pipeline": "energy_gold",
+    "industry": "energy",
+    "version": "1.0.0",
+    "description": "Gold star-schema models for the NorthGrid Resources Energy pack (ADR-005). Dimensions conform Silver entities; facts carry foreign keys to dimensions plus derived date keys and are joined at query time by BI/SQL Serverless. Facts enforce fail-on-violation expectations."
+  },
+  "schema": "gold",
+  "tables": [
+    {
+      "name": "dim_region",
+      "description": "Operating basins and regions (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "region_id",
+      "source": {
+        "table": "{catalog}.silver.regions"
+      }
+    },
+    {
+      "name": "dim_asset_type",
+      "description": "Classes of physical assets (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "asset_type_id",
+      "source": {
+        "table": "{catalog}.silver.asset_types"
+      }
+    },
+    {
+      "name": "dim_work_order_status",
+      "description": "Work order lifecycle statuses (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "status_code",
+      "source": {
+        "table": "{catalog}.silver.work_order_statuses"
+      }
+    },
+    {
+      "name": "dim_employee_role",
+      "description": "Job roles held by employees (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "role_id",
+      "source": {
+        "table": "{catalog}.silver.employee_roles"
+      }
+    },
+    {
+      "name": "dim_part_type",
+      "description": "Replacement parts and components (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "part_type_id",
+      "source": {
+        "table": "{catalog}.silver.part_types"
+      }
+    },
+    {
+      "name": "dim_customer",
+      "description": "Customer entities with conformed attributes (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "customer_id",
+      "source": {
+        "table": "{catalog}.silver.customers"
+      },
+      "foreign_keys": [
+        {
+          "column": "region_id",
+          "references": "dim_region"
+        }
+      ]
+    },
+    {
+      "name": "dim_location",
+      "description": "Physical sites where NorthGrid operates (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "location_id",
+      "source": {
+        "table": "{catalog}.silver.locations"
+      },
+      "foreign_keys": [
+        {
+          "column": "region_id",
+          "references": "dim_region"
+        }
+      ]
+    },
+    {
+      "name": "dim_asset",
+      "description": "Physical assets with type, owning customer, and site (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "asset_id",
+      "source": {
+        "table": "{catalog}.silver.assets"
+      },
+      "foreign_keys": [
+        {
+          "column": "asset_type_id",
+          "references": "dim_asset_type"
+        },
+        {
+          "column": "customer_id",
+          "references": "dim_customer"
+        },
+        {
+          "column": "location_id",
+          "references": "dim_location"
+        }
+      ]
+    },
+    {
+      "name": "dim_employee",
+      "description": "Personnel with role and site (Kimball dimension).",
+      "kind": "dimension",
+      "primary_key": "employee_id",
+      "source": {
+        "table": "{catalog}.silver.employees"
+      },
+      "foreign_keys": [
+        {
+          "column": "role_id",
+          "references": "dim_employee_role"
+        },
+        {
+          "column": "location_id",
+          "references": "dim_location"
+        }
+      ]
+    },
+    {
+      "name": "dim_date",
+      "description": "Calendar dimension covering the generator data window.",
+      "kind": "date_dimension",
+      "primary_key": "date_key",
+      "date_range": {
+        "start": "2024-01-01",
+        "end": "2026-07-31"
+      }
+    },
+    {
+      "name": "fact_work_order",
+      "description": "Work order fact at order grain with asset/site/customer/status keys.",
+      "kind": "fact",
+      "primary_key": "work_order_id",
+      "source": {
+        "table": "{catalog}.silver.work_orders"
+      },
+      "date_key": {
+        "column": "opened_at"
+      },
+      "foreign_keys": [
+        {
+          "column": "asset_id",
+          "references": "dim_asset"
+        },
+        {
+          "column": "location_id",
+          "references": "dim_location"
+        },
+        {
+          "column": "customer_id",
+          "references": "dim_customer"
+        },
+        {
+          "column": "status_code",
+          "references": "dim_work_order_status"
+        }
+      ],
+      "expectations": [
+        {
+          "name": "fact_work_order_work_order_id_not_null",
+          "constraint": "work_order_id IS NOT NULL"
+        },
+        {
+          "name": "fact_work_order_date_key_not_null",
+          "constraint": "date_key IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "fact_maintenance_event",
+      "description": "Maintenance and failure event fact with asset and originating work order.",
+      "kind": "fact",
+      "primary_key": "event_id",
+      "source": {
+        "table": "{catalog}.silver.maintenance_events"
+      },
+      "date_key": {
+        "column": "detected_at"
+      },
+      "foreign_keys": [
+        {
+          "column": "asset_id",
+          "references": "dim_asset"
+        },
+        {
+          "column": "work_order_id",
+          "references": "fact_work_order"
+        }
+      ],
+      "expectations": [
+        {
+          "name": "fact_maintenance_event_event_id_not_null",
+          "constraint": "event_id IS NOT NULL"
+        },
+        {
+          "name": "fact_maintenance_event_date_key_not_null",
+          "constraint": "date_key IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "fact_sensor_daily",
+      "description": "Daily sensor telemetry rollup per asset and sensor type.",
+      "kind": "fact",
+      "primary_key": ["asset_id", "sensor_type", "date_key"],
+      "source": {
+        "table": "{catalog}.silver.iot_events"
+      },
+      "aggregate": {
+        "group_by": ["asset_id", "sensor_type"],
+        "date_key": {
+          "column": "event_time"
+        },
+        "measures": [
+          {
+            "column": "reading",
+            "agg": "avg",
+            "as": "avg_reading"
+          },
+          {
+            "column": "reading",
+            "agg": "min",
+            "as": "min_reading"
+          },
+          {
+            "column": "reading",
+            "agg": "max",
+            "as": "max_reading"
+          },
+          {
+            "column": "is_alert",
+            "agg": "count_true",
+            "as": "alert_count"
+          }
+        ]
+      },
+      "foreign_keys": [
+        {
+          "column": "asset_id",
+          "references": "dim_asset"
+        }
+      ],
+      "expectations": [
+        {
+          "name": "fact_sensor_daily_date_key_not_null",
+          "constraint": "date_key IS NOT NULL"
+        }
+      ]
+    },
+    {
+      "name": "fact_weather_daily",
+      "description": "Daily weather observation fact per location.",
+      "kind": "fact",
+      "primary_key": "weather_id",
+      "source": {
+        "table": "{catalog}.silver.weather"
+      },
+      "date_key": {
+        "column": "observed_date"
+      },
+      "foreign_keys": [
+        {
+          "column": "location_id",
+          "references": "dim_location"
+        }
+      ],
+      "expectations": [
+        {
+          "name": "fact_weather_daily_weather_id_not_null",
+          "constraint": "weather_id IS NOT NULL"
+        },
+        {
+          "name": "fact_weather_daily_date_key_not_null",
+          "constraint": "date_key IS NOT NULL"
+        }
+      ]
+    }
+  ]
+}
