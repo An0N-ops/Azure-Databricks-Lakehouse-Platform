@@ -5,7 +5,7 @@ Navigation index for the platform documentation. Each document answers one quest
 | Document | Answers |
 | -------- | ------- |
 | [Architecture](architecture.md) | How is the platform built? |
-| [Deployment](deployment.md) | How do I deploy it? |
+| [Deployment](deployment.md) | How do I deploy it? Terraform infrastructure and Databricks Asset Bundles CI/CD. |
 | [Development](development.md) | How do I develop and test locally? |
 | [Security](security.md) | How is data access governed? |
 | [Monitoring](monitoring.md) | How is the platform observed? |

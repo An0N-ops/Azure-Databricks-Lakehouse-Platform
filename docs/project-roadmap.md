@@ -59,6 +59,7 @@ gantt
 - [ ] DLT event log parsing and Slack / Microsoft Teams incident alerting.
 
 ### Phase 5: End-to-End Release & Production Readiness (Target Phase 5)
+- [x] Databricks Asset Bundle packaging for the DLT pipelines (`bundle/databricks.yml`, targets `dev`/`qa`/`prod`) with a branch-driven `Databricks Bundle CI/CD` workflow and offline structural validation (`scripts/validate_bundle.py`); live workspace validate/deploy steps are gated on credentials and become active with OIDC below.
 - [ ] GitHub Actions OIDC automated Terraform deployment pipelines (`plan` on PR, `apply` on merge).
 - [ ] Automated notebook integration test execution against Databricks staging workspace.
 - [ ] Platform operational runbooks and performance benchmarks.

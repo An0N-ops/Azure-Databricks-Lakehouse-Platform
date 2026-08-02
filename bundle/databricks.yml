@@ -1,0 +1,141 @@
+# Databricks Asset Bundle for the Lakehouse medallion pipelines.
+#
+# Declares the Bronze, Silver, and Gold DLT pipelines and the environments
+# they deploy to. Catalog and landing-path values come from bundle variables so
+# a single definition promotes across dev, qa, and prod unchanged (mirrors the
+# {placeholder} resolution strategy in the manifests under pipelines/).
+bundle:
+  name: lakehouse
+  databricks_cli_version: ">=0.231.0"
+
+variables:
+  catalog:
+    description: >-
+      Unity Catalog catalog that owns the medallion schemas, matching
+      default_catalog_name from terraform/environments (e.g. dev_lakehouse).
+    default: dev_lakehouse
+  landing_path:
+    description: >-
+      ADLS Gen2 root (external location) where raw landing files are written;
+      the Bronze Auto Loader pipelines read {landing}/energy/* from this root.
+    default: abfss://bronze@stlakehousedevelop.dfs.core.windows.net/landing
+  service_principal:
+    description: >-
+      Application ID of the service principal that production-mode pipelines run
+      as (run_as). Provide it per target (e.g. --var service_principal=...); an
+      empty value means the creator owns the pipeline.
+    default: ""
+
+resources:
+  pipelines:
+    energy_bronze:
+      name: energy_bronze
+      catalog: ${var.catalog}
+      schema: bronze
+      channel: CURRENT
+      continuous: false
+      photon: true
+      tags:
+        environment: ${bundle.target}
+        project: lakehouse
+        managed_by: databricks-asset-bundles
+      clusters:
+        - label: default
+          num_workers: 2
+          node_type_id: Standard_DS3_v2
+          custom_tags:
+            environment: ${bundle.target}
+          spark_env_vars:
+            DATABRICKS_CATALOG: ${var.catalog}
+            DATABRICKS_LANDING_PATH: ${var.landing_path}
+      libraries:
+        - notebook:
+            path: ./notebooks/bronze/ingest_energy.py
+        - glob:
+            include: ./notebooks/shared/**
+
+    energy_silver:
+      name: energy_silver
+      catalog: ${var.catalog}
+      schema: silver
+      channel: CURRENT
+      continuous: false
+      photon: true
+      tags:
+        environment: ${bundle.target}
+        project: lakehouse
+        managed_by: databricks-asset-bundles
+      clusters:
+        - label: default
+          num_workers: 2
+          node_type_id: Standard_DS3_v2
+          custom_tags:
+            environment: ${bundle.target}
+          spark_env_vars:
+            DATABRICKS_CATALOG: ${var.catalog}
+            DATABRICKS_LANDING_PATH: ${var.landing_path}
+      libraries:
+        - notebook:
+            path: ./notebooks/silver/transform_energy.py
+        - glob:
+            include: ./notebooks/shared/**
+
+    energy_gold:
+      name: energy_gold
+      catalog: ${var.catalog}
+      schema: gold
+      channel: CURRENT
+      continuous: false
+      photon: true
+      tags:
+        environment: ${bundle.target}
+        project: lakehouse
+        managed_by: databricks-asset-bundles
+      clusters:
+        - label: default
+          num_workers: 2
+          node_type_id: Standard_DS3_v2
+          custom_tags:
+            environment: ${bundle.target}
+          spark_env_vars:
+            DATABRICKS_CATALOG: ${var.catalog}
+            DATABRICKS_LANDING_PATH: ${var.landing_path}
+      libraries:
+        - notebook:
+            path: ./notebooks/gold/transform_energy.py
+        - glob:
+            include: ./notebooks/shared/**
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net
+    variables:
+      catalog: dev_lakehouse
+      landing_path: abfss://bronze@stlakehousedevelop.dfs.core.windows.net/landing
+
+  qa:
+    mode: production
+    git:
+      branch: develop
+    run_as:
+      service_principal_name: ${var.service_principal}
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net
+    variables:
+      catalog: qa_lakehouse
+      landing_path: abfss://bronze@stlakehouseqa.dfs.core.windows.net/landing
+
+  prod:
+    mode: production
+    git:
+      branch: main
+    run_as:
+      service_principal_name: ${var.service_principal}
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net
+    variables:
+      catalog: prod_lakehouse
+      landing_path: abfss://bronze@stlakehouseprod.dfs.core.windows.net/landing
