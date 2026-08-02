@@ -1,0 +1,66 @@
+name: Terraform CI
+
+on:
+  push:
+    branches: [ main, "release/*" ]
+    paths:
+      - 'terraform/**'
+  pull_request:
+    branches: [ main, "release/*" ]
+    paths:
+      - 'terraform/**'
+
+jobs:
+  terraform-format:
+    name: Check Terraform Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Check Formatting
+        run: terraform fmt -check -recursive terraform/
+
+  terraform-validate-bootstrap:
+    name: Validate Bootstrap Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Init and Validate Bootstrap
+        run: |
+          cd terraform/bootstrap
+          terraform init -backend=false
+          terraform validate
+
+  terraform-validate-environment:
+    name: Validate ${{ matrix.environment }} Environment
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, qa, prod]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Init and Validate ${{ matrix.environment }} Environment
+        working-directory: terraform/environments/${{ matrix.environment }}
+        run: |
+          terraform init -backend=false
+          terraform validate

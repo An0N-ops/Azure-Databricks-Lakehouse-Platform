@@ -1,0 +1,18 @@
+subscription_id                  = "00000000-0000-0000-0000-000000000000"
+tenant_id                        = "00000000-0000-0000-0000-000000000000"
+databricks_account_id            = "00000000-0000-0000-0000-000000000000"
+databricks_auth_type             = "azure-cli"
+
+project_name                     = "lakehouse"
+environment                      = "prod"
+location                         = "eastus2"
+
+vnet_cidr                        = "10.100.0.0/16"
+public_subnet_cidr               = "10.100.1.0/24"
+private_subnet_cidr              = "10.100.2.0/24"
+
+storage_containers               = ["bronze", "silver", "gold", "unity-catalog"]
+storage_account_replication_type = "GRS"
+
+unity_catalog_force_destroy      = false
+unity_catalog_skip_validation    = false
