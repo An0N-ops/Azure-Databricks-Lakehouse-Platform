@@ -4,6 +4,21 @@
 # they deploy to. Catalog and landing-path values come from bundle variables so
 # a single definition promotes across dev, qa, and prod unchanged (mirrors the
 # {placeholder} resolution strategy in the manifests under pipelines/).
+# Optional per-developer local overrides (host, node types, landing paths).
+# Not committed: see .gitignore. Create bundle/databricks.local.yml to deploy
+# to a workspace other than the Azure reference targets below.
+include:
+  - databricks.local.yml
+
+# The bundle project lives in bundle/ but the DLT notebooks, declarative
+# pipeline manifests, and the synthetic data generator are source-controlled
+# at the repository root.
+sync:
+  paths:
+    - ../notebooks
+    - ../pipelines
+    - ../sample-data
+
 bundle:
   name: lakehouse
   databricks_cli_version: ">=0.231.0"
@@ -28,8 +43,8 @@ variables:
 
 resources:
   pipelines:
-    energy_bronze:
-      name: energy_bronze
+    energy_lakehouse:
+      name: energy_lakehouse
       catalog: ${var.catalog}
       schema: bronze
       channel: CURRENT
@@ -39,72 +54,31 @@ resources:
         environment: ${bundle.target}
         project: lakehouse
         managed_by: databricks-asset-bundles
-      clusters:
-        - label: default
-          num_workers: 2
-          node_type_id: Standard_DS3_v2
-          custom_tags:
-            environment: ${bundle.target}
-          spark_env_vars:
-            DATABRICKS_CATALOG: ${var.catalog}
-            DATABRICKS_LANDING_PATH: ${var.landing_path}
+      serverless: true
+      configuration:
+        DATABRICKS_CATALOG: ${var.catalog}
+        DATABRICKS_LANDING_PATH: ${var.landing_path}
       libraries:
-        - notebook:
-            path: ./notebooks/bronze/ingest_energy.py
         - glob:
-            include: ./notebooks/shared/**
-
-    energy_silver:
-      name: energy_silver
-      catalog: ${var.catalog}
-      schema: silver
-      channel: CURRENT
-      continuous: false
-      photon: true
+            include: ../notebooks/bronze/**
+        - glob:
+            include: ../notebooks/silver/**
+        - glob:
+            include: ../notebooks/gold/**
+  jobs:
+    generate_energy_data:
+      name: generate_energy_data
       tags:
         environment: ${bundle.target}
         project: lakehouse
         managed_by: databricks-asset-bundles
-      clusters:
-        - label: default
-          num_workers: 2
-          node_type_id: Standard_DS3_v2
-          custom_tags:
-            environment: ${bundle.target}
-          spark_env_vars:
-            DATABRICKS_CATALOG: ${var.catalog}
-            DATABRICKS_LANDING_PATH: ${var.landing_path}
-      libraries:
-        - notebook:
-            path: ./notebooks/silver/transform_energy.py
-        - glob:
-            include: ./notebooks/shared/**
-
-    energy_gold:
-      name: energy_gold
-      catalog: ${var.catalog}
-      schema: gold
-      channel: CURRENT
-      continuous: false
-      photon: true
-      tags:
-        environment: ${bundle.target}
-        project: lakehouse
-        managed_by: databricks-asset-bundles
-      clusters:
-        - label: default
-          num_workers: 2
-          node_type_id: Standard_DS3_v2
-          custom_tags:
-            environment: ${bundle.target}
-          spark_env_vars:
-            DATABRICKS_CATALOG: ${var.catalog}
-            DATABRICKS_LANDING_PATH: ${var.landing_path}
-      libraries:
-        - notebook:
-            path: ./notebooks/gold/transform_energy.py
-        - glob:
-            include: ./notebooks/shared/**
+      tasks:
+        - task_key: generate_data
+          notebook_task:
+            notebook_path: ../notebooks/generate_energy_data.py
+            base_parameters:
+              catalog: ${var.catalog}
+              landing_path: ${var.landing_path}
 
 targets:
   dev:

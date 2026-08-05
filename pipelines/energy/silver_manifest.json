@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "pipeline": "energy_silver",
+    "pipeline": "energy_lakehouse",
     "industry": "energy",
     "version": "1.0.0",
     "description": "Silver conformed entities for the NorthGrid Resources Energy pack. Each table reads its Bronze counterpart, normalizes string fields, enforces quality expectations, and upserts by its natural key (SCD Type 1)."

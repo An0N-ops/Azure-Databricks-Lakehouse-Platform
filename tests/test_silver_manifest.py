@@ -84,7 +84,7 @@ def _table(silver_data, name):
 
 def test_manifest_loads_and_validates_against_generator(silver_data, entity_schema):
     silver_manifest.validate_silver_manifest(silver_data, entity_schema)
-    assert silver_data["metadata"]["pipeline"] == "energy_silver"
+    assert silver_data["metadata"]["pipeline"] == "energy_lakehouse"
     assert silver_data["metadata"]["industry"] == "energy"
     assert silver_data["schema"] == "silver"
 

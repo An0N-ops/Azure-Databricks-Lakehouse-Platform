@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "pipeline": "energy_bronze",
+    "pipeline": "energy_lakehouse",
     "industry": "energy",
     "version": "1.0.0",
     "description": "Bronze Auto Loader ingestion for the NorthGrid Resources Energy pack. Tables mirror the synthetic generator entities in sample-data/sample_data/industries/energy/config.json."

@@ -74,7 +74,7 @@ def _table(bronze_manifest_data, name):
 
 def test_manifest_loads_and_validates(bronze_manifest_data):
     bronze_manifest.validate_manifest(bronze_manifest_data)
-    assert bronze_manifest_data["metadata"]["pipeline"] == "energy_bronze"
+    assert bronze_manifest_data["metadata"]["pipeline"] == "energy_lakehouse"
     assert bronze_manifest_data["metadata"]["industry"] == "energy"
     assert bronze_manifest_data["schema"] == "bronze"
 

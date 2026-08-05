@@ -28,7 +28,7 @@ def with_audit_columns(df: Any, *, commit_id: str | None = None) -> Any:
 
     return (
         df.withColumn("_ingested_at", F.current_timestamp())
-        .withColumn("_source_file", F.input_file_name())
+        .withColumn("_source_file", F.col("_metadata.file_path"))
         .withColumn("_commit_id", F.lit(commit_id or _default_commit_id(df)))
     )
 
@@ -96,9 +96,9 @@ def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str 
         raise ValueError(f"unsupported on_violation policy: {on_violation}")
 
     if on_violation == "drop":
-        decorator = dlt.expect
+        decorator = dlt.expect_or_drop
     elif on_violation == "retain":
-        decorator = dlt.expect_or_retain
+        decorator = dlt.expect
     else:
         decorator = dlt.expect_or_fail
     for expectation in spec.get("expectations", []):
@@ -109,28 +109,34 @@ def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str 
 def dlt_bronze_table(
     spec: Mapping[str, Any],
     *,
+    target_schema: str = "bronze",
     variables: Mapping[str, str] | None = None,
     commit_id: str | None = None,
 ) -> Any:
     """Register a DLT Bronze table for a manifest table spec.
 
-    The returned function is the decorator-applied streaming definition; DLT
-    derives the target table name from ``spec["name"]``.
+    The target is the schema-qualified ``"{target_schema}.{name}"`` so a single
+    DLT pipeline can own tables across schemas (bronze/silver/gold). DLT derives
+    the fully-qualified name as ``{catalog}.{schema}.{table}``.
     """
     import dlt
 
+    target_name = f"{target_schema}.{spec['name']}"
+
     def _ingest() -> Any:
+        from pyspark.sql import SparkSession
+
         return bronze_stream(
-            spark,  # noqa: F821 - provided by the Databricks notebook runtime
+            SparkSession.getActiveSession(),
             spec,
             variables=variables,
             commit_id=commit_id,
         )
 
-    _ingest.__name__ = spec["name"]
+    _ingest.__name__ = target_name
     _ingest.__doc__ = spec.get("description")
     return apply_expectations(
-        dlt.table(name=spec["name"], comment=spec.get("description", ""))(_ingest),
+        dlt.table(name=target_name, comment=spec.get("description", ""))(_ingest),
         spec,
         on_violation="retain",
     )
