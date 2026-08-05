@@ -96,30 +96,34 @@ def _aggregation_expr(measure: Mapping[str, str]) -> Any:
 def register_gold(
     spec: Mapping[str, Any],
     *,
+    target_schema: str = "gold",
     variables: Mapping[str, str] | None = None,
 ) -> Any:
     """Register a Gold table with fail-on-violation DLT expectations.
 
-    The target name is ``spec["name"]`` and the table comment is the spec's
-    description. Expectations use the Silver-to-Gold **fail** policy (ADR-005):
-    an update that violates a Gold quality contract aborts the pipeline rather
-    than silently producing a bad analytics table.
+    The target is the schema-qualified ``"{target_schema}.{name}"`` so a single
+    DLT pipeline can own tables across the bronze/silver/gold schemas. The table
+    comment is the spec's description. Expectations use the Silver-to-Gold
+    **fail** policy (ADR-005): an update that violates a Gold quality contract
+    aborts the pipeline rather than silently producing a bad analytics table.
     """
     import dlt
 
-    name = spec["name"]
+    target_name = f"{target_schema}.{spec['name']}"
 
     def _source() -> Any:
+        from pyspark.sql import SparkSession
+
         return gold_source(
-            spark,  # noqa: F821 - provided by the Databricks notebook runtime
+            SparkSession.getActiveSession(),
             spec,
             variables=variables,
         )
 
-    _source.__name__ = name
+    _source.__name__ = target_name
     _source.__doc__ = spec.get("description")
     return apply_expectations(
-        dlt.table(name=name, comment=spec.get("description", ""))(_source),
+        dlt.table(name=target_name, comment=spec.get("description", ""))(_source),
         spec,
         on_violation="fail",
     )

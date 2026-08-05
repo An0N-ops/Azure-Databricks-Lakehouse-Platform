@@ -71,6 +71,7 @@ def conformed_bronze(
 def register_silver(
     spec: Mapping[str, Any],
     *,
+    target_schema: str = "silver",
     variables: Mapping[str, str] | None = None,
 ) -> Any:
     """Register a Silver table: conformed source prep table + SCD Type 1 upsert.
@@ -80,32 +81,40 @@ def register_silver(
     DLT event log rather than dropped. Rows with null keys are skipped by the
     upsert (``ignore_null_keys``) so they never corrupt the SCD target, while
     still being visible in Bronze.
+
+    Targets are schema-qualified (``{target_schema}.{name}``) so a single DLT
+    pipeline can span the bronze/silver/gold schemas.
     """
     import dlt
 
-    name = spec["name"]
-    prep_name = f"silver_source_{name}"
+    target_name = f"{target_schema}.{spec['name']}"
+    prep_name = f"{target_schema}.silver_source_{spec['name']}"
 
     def _prep() -> Any:
+        from pyspark.sql import SparkSession
+
         return conformed_bronze(
-            spark,  # noqa: F821 - provided by the Databricks notebook runtime
+            SparkSession.getActiveSession(),
             spec,
             variables=variables,
         )
 
     _prep.__name__ = prep_name
-    _prep.__doc__ = f"Conformed Bronze source for silver.{name}"
+    _prep.__doc__ = f"Conformed Bronze source for silver.{spec['name']}"
     apply_expectations(
-        dlt.table(name=prep_name, comment=f"Conformed Bronze source for silver.{name}")(_prep),
+        dlt.table(name=prep_name, comment=f"Conformed Bronze source for silver.{spec['name']}")(
+            _prep
+        ),
         spec,
         on_violation="retain",
     )
+    dlt.create_streaming_table(
+        name=target_name,
+        comment=f"Silver {spec['name']} target (CDC)",
+    )
     dlt.apply_changes(
-        target=name,
+        target=target_name,
         source=prep_name,
         keys=list(spec["keys"]),
         sequence_by="_ingested_at",
-        ignore_null_keys=True,
-        ignore_null_updates=False,
-        apply_as_append=False,
     )

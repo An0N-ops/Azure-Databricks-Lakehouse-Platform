@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "pipeline": "energy_gold",
+    "pipeline": "energy_lakehouse",
     "industry": "energy",
     "version": "1.0.0",
     "description": "Gold star-schema models for the NorthGrid Resources Energy pack (ADR-005). Dimensions conform Silver entities; facts carry foreign keys to dimensions plus derived date keys and are joined at query time by BI/SQL Serverless. Facts enforce fail-on-violation expectations."

@@ -12,6 +12,16 @@ exclude = [
     "**/*.md",
 ]
 
+# Notebooks execute inside the Databricks runtime, which injects `dbutils` and
+# `spark` as globals rather than importing them, so F821 (undefined name) is
+# expected. The runtime-probe helpers also deliberately guard against a missing
+# Spark session with a blind `except Exception` fallback (S110/BLE001), and the
+# data generator's as-of date intentionally uses the caller's local date
+# (DTZ011). These are runtime contracts, not defects, so they are allowed only
+# for notebook sources.
+[tool.ruff.lint.per-file-ignores]
+"notebooks/**" = ["F821", "S110", "BLE001", "DTZ011", "DTZ005"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"

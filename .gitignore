@@ -100,3 +100,16 @@ sample-data/output/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Local development environments
+.databricks
+.venv/
+
+# Databricks Connect generated artefacts
+__builtins__.pyi
+
+# opencode skills (personal assistant configuration)
+.opencode/
+
+# Databricks Asset Bundle per-developer overrides (never committed)
+bundle/databricks.local.yml
