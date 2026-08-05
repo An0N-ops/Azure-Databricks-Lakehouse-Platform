@@ -89,7 +89,7 @@ def _table(gold_data, name):
 
 def test_manifest_loads_and_validates_against_generator(gold_data, entity_schema):
     gold_manifest.validate_gold_manifest(gold_data, entity_schema)
-    assert gold_data["metadata"]["pipeline"] == "energy_gold"
+    assert gold_data["metadata"]["pipeline"] == "energy_lakehouse"
     assert gold_data["metadata"]["industry"] == "energy"
     assert gold_data["schema"] == "gold"
 

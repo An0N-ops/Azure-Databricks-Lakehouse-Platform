@@ -33,6 +33,25 @@ CATALOG_ENV = "DATABRICKS_CATALOG"
 LANDING_ENV = "DATABRICKS_LANDING_PATH"
 
 
+def _spark_conf(name: str) -> str | None:
+    """Read a key from the active Spark session without importing PySpark eagerly.
+
+    Falls back to DLT pipeline ``configuration`` values (the serverless-safe
+    replacement for cluster ``spark_env_vars``). Returns ``None`` when no
+    Spark session is active (e.g. pure-Python unit tests).
+    """
+    try:
+        from pyspark.sql import SparkSession
+
+        spark = SparkSession.getActiveSession()
+    except Exception:
+        return None
+    if spark is None:
+        return None
+    value = spark.conf.get(name, None)
+    return value or None
+
+
 class ManifestError(Exception):
     """Raised when a Bronze manifest is missing, malformed, or invalid."""
 
@@ -186,8 +205,8 @@ def default_variables() -> dict[str, str]:
     when ``DATABRICKS_LANDING_PATH`` is set. A source path that references
     ``{landing}`` without the environment variable fails at resolution time.
     """
-    variables = {"catalog": os.environ.get(CATALOG_ENV, DEFAULT_CATALOG)}
-    landing = os.environ.get(LANDING_ENV)
+    variables = {"catalog": os.environ.get(CATALOG_ENV, _spark_conf(CATALOG_ENV) or DEFAULT_CATALOG)}
+    landing = os.environ.get(LANDING_ENV) or _spark_conf(LANDING_ENV)
     if landing:
         variables["landing"] = landing.rstrip("/")
     return variables

@@ -110,3 +110,6 @@ __builtins__.pyi
 
 # opencode skills (personal assistant configuration)
 .opencode/
+
+# Databricks Asset Bundle per-developer overrides (never committed)
+bundle/databricks.local.yml
