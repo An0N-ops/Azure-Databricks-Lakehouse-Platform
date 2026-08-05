@@ -4,10 +4,14 @@
 not available until Phase 5 wires up OIDC credentials in CI. This module runs
 the checks that can be made from the repository alone:
 
-- the bundle declares the expected environments and pipelines,
-- every pipeline references a notebook that exists on disk,
-- DLT clusters expose the manifest placeholders (catalog, landing path) via
-  ``spark_env_vars``, and
+- the bundle declares the expected environments, the medallion pipeline, and
+  the synthetic data-generation job,
+- the pipeline references notebook globs that match files on disk,
+- the pipeline exposes the manifest placeholders (catalog, landing path) via
+  ``configuration`` (the serverless-safe replacement for cluster
+  ``spark_env_vars``),
+- the job runs the data-generation notebook with catalog/landing parameters,
+  and
 - production targets are pinned to a git branch and a service principal.
 
 It is pure Python (PyYAML) so it runs in CI without Databricks credentials,
@@ -23,12 +27,16 @@ from pathlib import Path
 import yaml
 
 EXPECTED_TARGETS = ("dev", "qa", "prod")
-EXPECTED_PIPELINES = {
-    "energy_bronze": {"schema": "bronze", "notebook": "notebooks/bronze/ingest_energy.py"},
-    "energy_silver": {"schema": "silver", "notebook": "notebooks/silver/transform_energy.py"},
-    "energy_gold": {"schema": "gold", "notebook": "notebooks/gold/transform_energy.py"},
-}
-REQUIRED_ENV_VARS = ("DATABRICKS_CATALOG", "DATABRICKS_LANDING_PATH")
+PIPELINE_NAME = "energy_lakehouse"
+PIPELINE_NOTEBOOK_GLOBS = (
+    "notebooks/bronze/**",
+    "notebooks/silver/**",
+    "notebooks/gold/**",
+)
+REQUIRED_CONFIG = ("DATABRICKS_CATALOG", "DATABRICKS_LANDING_PATH")
+JOB_NAME = "generate_energy_data"
+JOB_NOTEBOOK = "notebooks/generate_energy_data.py"
+JOB_PARAMS = ("catalog", "landing_path")
 
 
 class BundleError(Exception):
@@ -76,12 +84,16 @@ def validate_bundle(config: dict, root: Path) -> None:
             raise BundleError(f"variables.{variable} is required")
 
     resources = _require_mapping(config.get("resources"), "resources is required")
+
     pipelines = _require_mapping(resources.get("pipelines"), "resources.pipelines is required")
-    for expected, spec in EXPECTED_PIPELINES.items():
-        pipeline = _require_mapping(
-            pipelines.get(expected), f"resources.pipelines.{expected} is required"
-        )
-        _validate_pipeline(expected, pipeline, spec, root)
+    if PIPELINE_NAME not in pipelines:
+        raise BundleError(f"resources.pipelines.{PIPELINE_NAME} is required")
+    _validate_pipeline(PIPELINE_NAME, _require_mapping(pipelines[PIPELINE_NAME], "pipeline"), root)
+
+    jobs = _require_mapping(resources.get("jobs"), "resources.jobs is required")
+    if JOB_NAME not in jobs:
+        raise BundleError(f"resources.jobs.{JOB_NAME} is required")
+    _validate_job(JOB_NAME, _require_mapping(jobs[JOB_NAME], "job"), root)
 
     targets = _require_mapping(config.get("targets"), "targets is required")
     for expected in EXPECTED_TARGETS:
@@ -90,52 +102,84 @@ def validate_bundle(config: dict, root: Path) -> None:
         )
 
 
-def _validate_pipeline(name: str, pipeline: dict, spec: dict, root: Path) -> None:
+def _validate_pipeline(name: str, pipeline: dict, root: Path) -> None:
     if pipeline.get("name") != name:
         raise BundleError(f"resources.pipelines.{name}.name must equal '{name}'")
     if not pipeline.get("catalog"):
         raise BundleError(f"resources.pipelines.{name}.catalog is required")
-    if pipeline.get("schema") != spec["schema"]:
-        raise BundleError(f"resources.pipelines.{name}.schema must be '{spec['schema']}'")
 
-    clusters = pipeline.get("clusters")
-    if not isinstance(clusters, list) or not clusters:
-        raise BundleError(f"resources.pipelines.{name}.clusters must be a non-empty list")
-    env_vars = _require_mapping(
-        clusters[0].get("spark_env_vars"),
-        f"resources.pipelines.{name}.clusters[0].spark_env_vars is required",
+    configuration = _require_mapping(
+        pipeline.get("configuration"),
+        f"resources.pipelines.{name}.configuration is required",
     )
-    for variable in REQUIRED_ENV_VARS:
-        if variable not in env_vars:
-            raise BundleError(
-                f"resources.pipelines.{name}.clusters[0].spark_env_vars.{variable} is required"
-            )
+    for variable in REQUIRED_CONFIG:
+        if variable not in configuration:
+            raise BundleError(f"resources.pipelines.{name}.configuration.{variable} is required")
 
     libraries = pipeline.get("libraries")
     if not isinstance(libraries, list) or not libraries:
         raise BundleError(f"resources.pipelines.{name}.libraries must be a non-empty list")
-    notebook_paths = []
+    glob_paths = []
     for library in libraries:
         library = _require_mapping(
             library, f"resources.pipelines.{name}.libraries entries must be mappings"
         )
-        if "notebook" in library:
-            notebook = _require_mapping(
-                library["notebook"],
-                f"resources.pipelines.{name}.libraries[].notebook must be a mapping",
-            )
-            notebook_paths.append(
-                _require(notebook.get("path"), "notebook.path is required").lstrip("./")
-            )
-    if spec["notebook"] not in notebook_paths:
-        raise BundleError(
-            f"resources.pipelines.{name} must reference {spec['notebook']} in libraries"
+        library_glob = _require_mapping(
+            library.get("glob"),
+            f"resources.pipelines.{name}.libraries[].glob is required",
         )
-    for notebook_path in notebook_paths:
-        if not (root / notebook_path.lstrip("./")).is_file():
+        include = _require(
+            library_glob.get("include"), "resources.pipelines.[].glob.include is required"
+        )
+        glob_paths.append(include.lstrip("./"))
+
+    for expected_glob in PIPELINE_NOTEBOOK_GLOBS:
+        if expected_glob not in glob_paths:
             raise BundleError(
-                f"resources.pipelines.{name} references missing notebook: {notebook_path}"
+                f"resources.pipelines.{name} must reference '{expected_glob}' in libraries"
             )
+    for glob_path in glob_paths:
+        matches = list(root.glob(glob_path))
+        if not matches:
+            raise BundleError(
+                f"resources.pipelines.{name} references glob with no matches: {glob_path}"
+            )
+
+
+def _validate_job(name: str, job: dict, root: Path) -> None:
+    tasks = job.get("tasks")
+    if not isinstance(tasks, list) or not tasks:
+        raise BundleError(f"resources.jobs.{name}.tasks must be a non-empty list")
+    task_keys = []
+    for task in tasks:
+        notebook_task = _require_mapping(
+            task.get("notebook_task"),
+            f"resources.jobs.{name}.tasks[].notebook_task is required",
+        )
+        notebook_path = _require(
+            notebook_task.get("notebook_path"),
+            f"resources.jobs.{name}.tasks[].notebook_task.notebook_path is required",
+        )
+        if notebook_path.lstrip("./") != JOB_NOTEBOOK:
+            raise BundleError(
+                f"resources.jobs.{name} must reference {JOB_NOTEBOOK} in notebook_task"
+            )
+        if not (root / notebook_path.lstrip("./")).is_file():
+            raise BundleError(f"resources.jobs.{name} references missing notebook: {notebook_path}")
+        base_parameters = _require_mapping(
+            notebook_task.get("base_parameters"),
+            f"resources.jobs.{name}.tasks[].notebook_task.base_parameters is required",
+        )
+        for parameter in JOB_PARAMS:
+            if parameter not in base_parameters:
+                raise BundleError(
+                    f"resources.jobs.{name}.tasks[].notebook_task.base_parameters.{parameter} "
+                    "is required"
+                )
+        task_keys.append(task.get("task_key"))
+
+    if not task_keys or any(key is None for key in task_keys):
+        raise BundleError(f"resources.jobs.{name}.tasks[].task_key is required")
 
 
 def _validate_target(name: str, target: dict) -> None:

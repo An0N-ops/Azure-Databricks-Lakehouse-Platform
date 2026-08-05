@@ -205,7 +205,9 @@ def default_variables() -> dict[str, str]:
     when ``DATABRICKS_LANDING_PATH`` is set. A source path that references
     ``{landing}`` without the environment variable fails at resolution time.
     """
-    variables = {"catalog": os.environ.get(CATALOG_ENV, _spark_conf(CATALOG_ENV) or DEFAULT_CATALOG)}
+    variables = {
+        "catalog": os.environ.get(CATALOG_ENV, _spark_conf(CATALOG_ENV) or DEFAULT_CATALOG)
+    }
     landing = os.environ.get(LANDING_ENV) or _spark_conf(LANDING_ENV)
     if landing:
         variables["landing"] = landing.rstrip("/")

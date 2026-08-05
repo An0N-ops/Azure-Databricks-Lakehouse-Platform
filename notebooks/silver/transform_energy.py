@@ -21,7 +21,9 @@ def _sync_root() -> Path:
     """
     candidates: list[Path] = []
     try:
-        path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+        path = (
+            dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+        )
         if path:
             candidates.append(Path(path).parent)
     except Exception:
