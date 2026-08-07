@@ -106,6 +106,9 @@ def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str 
     return func
 
 
+CDF_PROPERTY = "delta.enableChangeDataFeed"
+
+
 def dlt_bronze_table(
     spec: Mapping[str, Any],
     *,
@@ -118,6 +121,11 @@ def dlt_bronze_table(
     The target is the schema-qualified ``"{target_schema}.{name}"`` so a single
     DLT pipeline can own tables across schemas (bronze/silver/gold). DLT derives
     the fully-qualified name as ``{catalog}.{schema}.{table}``.
+
+    Change Data Feed is enabled on every Bronze table (``delta.enableChangeDataFeed =
+    true``) so downstream Silver/Gold flows can consume inserts, updates, and
+    deletes instead of failing on non-append source commits (the standard
+    ``DELTA_SOURCE_TABLE_IGNORE_CHANGES`` mitigation).
     """
     import dlt
 
@@ -136,7 +144,11 @@ def dlt_bronze_table(
     _ingest.__name__ = target_name
     _ingest.__doc__ = spec.get("description")
     return apply_expectations(
-        dlt.table(name=target_name, comment=spec.get("description", ""))(_ingest),
+        dlt.table(
+            name=target_name,
+            comment=spec.get("description", ""),
+            table_properties={CDF_PROPERTY: "true"},
+        )(_ingest),
         spec,
         on_violation="retain",
     )
