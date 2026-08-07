@@ -23,8 +23,9 @@ gantt
     section Phase 3: Pipelines
     Bronze Ingestion Framework      :done, p3_1, 2026-08-15, 2026-08-22
     Silver Conformed Transformations :done, p3_2, 2026-08-20, 2026-08-28
-    Gold Star Schema & DLT          : p3_3, 2026-08-25, 2026-09-02
+    Gold Star Schema & DLT          :done, p3_3, 2026-08-25, 2026-09-02
     section Phase 4: Observability
+    Gold Reporting Dashboards        :active, p4_0, 2026-09-01, 2026-09-10
     System Tables & Log Analytics   : p4_1, 2026-09-01, 2026-09-08
     Data Quality & Alerting         : p4_2, 2026-09-05, 2026-09-12
     section Phase 5: CI/CD & Production
@@ -48,12 +49,13 @@ gantt
 - [x] Unity Catalog metastore, Access Connector (Managed Identity), storage credentials, external locations, catalogs, and medallion schemas.
 - [x] AzureRM provider upgraded to `~> 5.0` with regenerated lock files.
 
-### Phase 3: Medallion Data Pipelines & Delta Live Tables (Target Phase 3)
+### Phase 3: Medallion Data Pipelines & Delta Live Tables (Implemented)
 - [x] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion (Oracle Fusion ERP, SFTP, REST APIs). Framework delivered: declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`); wiring to real Oracle/SFTP/REST sources remains Phase 3.
 - [x] Silver layer conformed transformations, SCD Type 1/2 tracking, and schema validation. Framework delivered: declarative Silver manifest (`pipelines/energy/silver_manifest.json`), conforming helpers (`notebooks/shared/silver.py`), and a data-driven DLT notebook (`notebooks/silver/transform_energy.py`) using SCD Type 1 upserts; SCD Type 2 tracking remains Phase 3.
 - [x] Gold layer star schema modeling (`fact_sales`, `dim_customer_360`, `kpi_financials`). Framework delivered: declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with Kimball dimensions, a generated date dimension, and facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); and a data-driven DLT notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations. ABI dashboards and SQL Serverless models remain Phase 4.
 
-### Phase 4: Monitoring, Observability & Data Quality (Target Phase 4)
+### Phase 4: Monitoring, Observability, Dashboards & Data Quality (In Progress)
+- [ ] Gold reporting dashboards (Databricks AI/BI / Lakeview) deployed from the Databricks Asset Bundle (`bundle/resources/energy_operations.dashboard.yml` + `bundle/src/energy_operations.lvdash.json`) on top of the Gold star schema. In progress: NorthGrid Energy Operations live in dev.
 - [ ] Databricks System Tables queries for billing, cluster performance, and audit tracking.
 - [ ] Integration with Azure Log Analytics workspace and Grafana / Databricks SQL dashboards.
 - [ ] DLT event log parsing and Slack / Microsoft Teams incident alerting.

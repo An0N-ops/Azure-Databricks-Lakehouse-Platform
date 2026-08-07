@@ -9,6 +9,7 @@
 # to a workspace other than the Azure reference targets below.
 include:
   - databricks.local.yml
+  - resources/*.yml
 
 # The bundle project lives in bundle/ but the DLT notebooks, declarative
 # pipeline manifests, and the synthetic data generator are source-controlled
@@ -40,6 +41,18 @@ variables:
       as (run_as). Provide it per target (e.g. --var service_principal=...); an
       empty value means the creator owns the pipeline.
     default: ""
+  warehouse_id:
+    description: >-
+      SQL warehouse that executes queries for the AI/BI dashboards defined in
+      this bundle. Defaults to the Serverless Starter Warehouse in the dev
+      workspace; override per target.
+    default: ""
+  gold_schema:
+    description: >-
+      Unity Catalog schema holding the Gold reporting tables that the AI/BI
+      dashboards query. Dashboards combine the bundle catalog variable with this
+      schema via dataset_catalog/dataset_schema.
+    default: gold
 
 resources:
   pipelines:
