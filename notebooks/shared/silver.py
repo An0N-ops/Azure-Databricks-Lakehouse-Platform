@@ -62,9 +62,16 @@ def conformed_bronze(
     *,
     variables: Mapping[str, str] | None = None,
 ) -> Any:
-    """Read a spec's Bronze table and apply conforming plus ``_updated_at``."""
+    """Read a spec's Bronze table as a streaming source and apply conforming.
+
+    Uses ``spark.readStream.table`` so the prep table consumes the Bronze
+    Change Data Feed (Bronze now enables ``delta.enableChangeDataFeed``). This
+    keeps Silver incremental and database-fied even when Bronze receives
+    non-append commits (updates/deletes/overwrites), the canonical
+    ``DELTA_SOURCE_TABLE_IGNORE_CHANGES`` mitigation.
+    """
     source_table = silver_manifest.resolve_source_table(spec, variables)
-    df = spark.table(source_table)
+    df = spark.readStream.table(source_table)
     return with_updated_at(apply_conform(df, spec.get("conform")))
 
 
@@ -81,6 +88,11 @@ def register_silver(
     DLT event log rather than dropped. Rows with null keys are skipped by the
     upsert (``ignore_null_keys``) so they never corrupt the SCD target, while
     still being visible in Bronze.
+
+    The prep reads Bronze from its Change Data Feed (streaming), so Silver
+    tracks every insert/update/delete in Bronze. The SCD target enables the
+    Change Data Feed as well, so Gold can ingest Silver's own change commits
+    incrementally instead of snapshotting the table.
 
     Targets are schema-qualified (``{target_schema}.{name}``) so a single DLT
     pipeline can span the bronze/silver/gold schemas.
@@ -102,15 +114,18 @@ def register_silver(
     _prep.__name__ = prep_name
     _prep.__doc__ = f"Conformed Bronze source for silver.{spec['name']}"
     apply_expectations(
-        dlt.table(name=prep_name, comment=f"Conformed Bronze source for silver.{spec['name']}")(
-            _prep
-        ),
+        dlt.table(
+            name=prep_name,
+            comment=f"Conformed Bronze source for silver.{spec['name']}",
+            table_properties={"delta.enableChangeDataFeed": "true"},
+        )(_prep),
         spec,
         on_violation="retain",
     )
     dlt.create_streaming_table(
         name=target_name,
         comment=f"Silver {spec['name']} target (CDC)",
+        table_properties={"delta.enableChangeDataFeed": "true"},
     )
     dlt.apply_changes(
         target=target_name,
