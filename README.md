@@ -63,7 +63,7 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 ├── sample-data/           # Synthetic data generator (config-driven, deterministic)
 ├── scripts/               # Phase 3+ — automation and Databricks CLI utilities
 ├── tests/                 # Unit tests (pytest) — see sample-data/README.md
-├── dashboards/            # Phase 4 — Databricks SQL / Power BI dashboard specs
+├── dashboards/            # Phase 4 — AI/BI dashboard docs; specs deploy from bundle/src
 ├── .github/               # CI workflows, dependabot, PR/issue templates
 ├── README.md
 ├── CONTRIBUTING.md
@@ -91,10 +91,10 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 
 Releases track implemented functionality. **v0.2.0 — Foundation Complete** covers Phases 1–2; everything below is upcoming implementation work.
 
-- **Phase 1 (done)** — repository foundation, governance, CI workflows.
+- **Phase 1 (done)** — repo skeleton, governance, CI workflows.
 - **Phase 2 (done)** — Terraform IaC: bootstrap, modules, Unity Catalog, `dev`/`qa`/`prod`, azurerm 5.0.
-- **Phase 3 (in progress)** — Medallion pipelines: Bronze ingestion, Silver DLT, and Gold star schema delivered.
-- **Phase 4** — monitoring, data quality, dashboards.
+- **Phase 3 (implemented)** — Medallion pipelines: Bronze ingestion, Silver DLT, and Gold star schema delivered.
+- **Phase 4 (in progress)** — monitoring, data quality, dashboards.
 - **Phase 5** — OIDC automated deployment and production readiness.
 
 See [`docs/project-roadmap.md`](docs/project-roadmap.md) for the detailed plan and release strategy.

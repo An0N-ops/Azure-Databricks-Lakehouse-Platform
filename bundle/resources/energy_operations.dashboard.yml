@@ -1,0 +1,9 @@
+resources:
+  dashboards:
+    energy_operations:
+      display_name: "NorthGrid Energy Operations"
+      warehouse_id: ${var.warehouse_id}
+      dataset_catalog: ${var.catalog}
+      dataset_schema: ${var.gold_schema}
+      file_path: ../src/energy_operations.lvdash.json
+      parent_path: /Users/gauravsahu06904@gmail.com/dashboards

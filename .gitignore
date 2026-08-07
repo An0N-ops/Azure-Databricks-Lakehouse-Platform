@@ -113,3 +113,5 @@ __builtins__.pyi
 
 # Databricks Asset Bundle per-developer overrides (never committed)
 bundle/databricks.local.yml
+
+.databricks
