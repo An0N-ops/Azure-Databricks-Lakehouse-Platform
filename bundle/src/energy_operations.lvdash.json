@@ -72,6 +72,21 @@
         "LEFT JOIN dim_location dl ON a.location_id = dl.location_id\n",
         "LEFT JOIN dim_region dr ON dl.region_id = dr.region_id\n"
       ]
+    },
+    {
+      "displayName": "Weather Observations",
+      "name": "ds_weather",
+      "queryLines": [
+        "SELECT w.weather_id, w.condition,\n",
+        "       CAST(w.temperature_c AS DOUBLE) AS temperature_c,\n",
+        "       CAST(w.precipitation_mm AS DOUBLE) AS precipitation_mm,\n",
+        "       CAST(w.humidity_pct AS DOUBLE) AS humidity_pct,\n",
+        "       CAST(w.observed_date AS DATE) AS observed_date,\n",
+        "       dl.region_id, dr.region_name\n",
+        "FROM fact_weather_daily w\n",
+        "LEFT JOIN dim_location dl ON w.location_id = dl.location_id\n",
+        "LEFT JOIN dim_region dr ON dl.region_id = dr.region_id\n"
+      ]
     }
   ],
   "pages": [
@@ -80,7 +95,7 @@
       "layout": [
         {
           "position": {
-            "height": 3,
+            "height": 2,
             "width": 12,
             "x": 0,
             "y": 0
@@ -90,7 +105,7 @@
               "lines": [
                 "# NorthGrid Energy Operations\n",
                 "\n",
-                "**Reliability story:** Work order backlog, maintenance spend, and sensor health for the NorthGrid synthetic energy fleet spanning 2024–2026. Open work orders dominate the backlog (majority never complete), maintenance cost is driven heavily by Operator Error root cause, and Flow/Pressure/Temperature sensors generate the most alerts. Use the filters page to slice by region or time window."
+                "**Reliability story:** Work order backlog, maintenance spend, sensor health, and site weather for the NorthGrid synthetic energy fleet spanning 2024–2026. Open work orders dominate the backlog, maintenance cost is driven by root cause, and Flow / Temperature / Pressure sensors generate the most alerts. Use the filters strip to slice by time, region, priority, status, or work type."
               ]
             },
             "name": "header"
@@ -101,7 +116,7 @@
             "height": 3,
             "width": 3,
             "x": 0,
-            "y": 3
+            "y": 2
           },
           "widget": {
             "name": "kpi-open-wo",
@@ -141,7 +156,7 @@
             "height": 3,
             "width": 3,
             "x": 3,
-            "y": 3
+            "y": 2
           },
           "widget": {
             "name": "kpi-maint-cost",
@@ -164,7 +179,12 @@
               "encodings": {
                 "value": {
                   "displayName": "Maintenance Cost",
-                  "fieldName": "measure(Total Maintenance Cost)"
+                  "fieldName": "measure(Total Maintenance Cost)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact"
+                  }
                 }
               },
               "frame": {
@@ -181,7 +201,7 @@
             "height": 3,
             "width": 3,
             "x": 6,
-            "y": 3
+            "y": 2
           },
           "widget": {
             "name": "kpi-downtime",
@@ -204,7 +224,11 @@
               "encodings": {
                 "value": {
                   "displayName": "Downtime Hours",
-                  "fieldName": "measure(Total Downtime Hours)"
+                  "fieldName": "measure(Total Downtime Hours)",
+                  "format": {
+                    "type": "number-plain",
+                    "suffix": " h"
+                  }
                 }
               },
               "frame": {
@@ -221,7 +245,7 @@
             "height": 3,
             "width": 3,
             "x": 9,
-            "y": 3
+            "y": 2
           },
           "widget": {
             "name": "kpi-alerts",
@@ -254,6 +278,24 @@
               "version": 2,
               "widgetType": "counter"
             }
+          }
+        },
+        {
+          "position": {
+            "height": 1,
+            "width": 12,
+            "x": 0,
+            "y": 5
+          },
+          "widget": {
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Work orders — trend & plan vs. actual\n",
+                "\n",
+                "Monthly volume by status and how planned hours compare with actual hours spent."
+              ]
+            },
+            "name": "section-wo"
           }
         },
         {
@@ -332,21 +374,31 @@
             "y": 6
           },
           "widget": {
-            "name": "alerts-by-region",
+            "name": "planned-actual",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "ds_sensor",
+                  "datasetName": "ds_work",
                   "disaggregated": false,
                   "fields": [
                     {
-                      "expression": "SUM(`alert_count`)",
-                      "name": "sum(alert_count)"
+                      "expression": "DATE_TRUNC(\"MONTH\", `work_date`)",
+                      "name": "monthly(work_date)"
                     },
                     {
-                      "expression": "`region_id`",
-                      "name": "region_id"
+                      "expression": "SUM(`planned_hours`)",
+                      "name": "sum(planned_hours)"
+                    },
+                    {
+                      "expression": "SUM(`actual_hours`)",
+                      "name": "sum(actual_hours)"
+                    }
+                  ],
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "DATE_TRUNC(\"MONTH\", `work_date`)"
                     }
                   ]
                 }
@@ -355,25 +407,52 @@
             "spec": {
               "encodings": {
                 "x": {
-                  "fieldName": "region_id",
+                  "fieldName": "monthly(work_date)",
                   "scale": {
-                    "type": "categorical"
+                    "type": "temporal"
                   }
                 },
                 "y": {
-                  "fieldName": "sum(alert_count)",
                   "scale": {
                     "type": "quantitative"
-                  }
+                  },
+                  "fields": [
+                    {
+                      "fieldName": "sum(planned_hours)",
+                      "displayName": "Planned Hours"
+                    },
+                    {
+                      "fieldName": "sum(actual_hours)",
+                      "displayName": "Actual Hours"
+                    }
+                  ]
                 }
               },
               "frame": {
                 "showTitle": true,
-                "title": "Sensor Alerts by Region"
+                "title": "Planned vs Actual Hours by Month"
               },
               "version": 3,
-              "widgetType": "bar"
+              "widgetType": "line"
             }
+          }
+        },
+        {
+          "position": {
+            "height": 1,
+            "width": 12,
+            "x": 0,
+            "y": 12
+          },
+          "widget": {
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Maintenance & Reliability\n",
+                "\n",
+                "Monthly cost and downtime with the top cost drivers by root cause."
+              ]
+            },
+            "name": "section-maint"
           }
         },
         {
@@ -381,7 +460,87 @@
             "height": 6,
             "width": 6,
             "x": 0,
-            "y": 12
+            "y": 13
+          },
+          "widget": {
+            "name": "cost-downtime-combo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_maint",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "DATE_TRUNC(\"MONTH\", `detected_date`)",
+                      "name": "monthly(detected_date)"
+                    },
+                    {
+                      "expression": "SUM(`maintenance_cost`)",
+                      "name": "sum(maintenance_cost)"
+                    },
+                    {
+                      "expression": "SUM(`downtime_hours`)",
+                      "name": "sum(downtime_hours)"
+                    }
+                  ],
+                  "orders": [
+                    {
+                      "direction": "ASC",
+                      "expression": "DATE_TRUNC(\"MONTH\", `detected_date`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(detected_date)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "primary": {
+                    "fields": [
+                      {
+                        "fieldName": "sum(maintenance_cost)",
+                        "displayName": "Maintenance cost ($)"
+                      }
+                    ]
+                  },
+                  "secondary": {
+                    "fields": [
+                      {
+                        "fieldName": "sum(downtime_hours)",
+                        "displayName": "Downtime hours"
+                      }
+                    ]
+                  }
+                },
+                "label": {
+                  "show": false
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Maintenance Cost & Downtime by Month"
+              },
+              "version": 1,
+              "widgetType": "combo"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 6,
+            "x": 6,
+            "y": 13
           },
           "widget": {
             "name": "cost-by-root-cause",
@@ -435,10 +594,205 @@
         },
         {
           "position": {
+            "height": 1,
+            "width": 12,
+            "x": 0,
+            "y": 19
+          },
+          "widget": {
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Sensors & Site Weather\n\n",
+                "Alert hotspots by type / region and the weather conditions at monitored sites."
+              ]
+            },
+            "name": "section-sensor"
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 6,
+            "x": 0,
+            "y": 20
+          },
+          "widget": {
+            "name": "alerts-by-sensor",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_sensor",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "SUM(`alert_count`)",
+                      "name": "sum(alert_count)"
+                    },
+                    {
+                      "expression": "`sensor_type`",
+                      "name": "sensor_type"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "x": {
+                  "fieldName": "sensor_type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(alert_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Sensor Alerts by Sensor Type"
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
             "height": 6,
             "width": 6,
             "x": 6,
-            "y": 12
+            "y": 20
+          },
+          "widget": {
+            "name": "alerts-by-region",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_sensor",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "SUM(`alert_count`)",
+                      "name": "sum(alert_count)"
+                    },
+                    {
+                      "expression": "`region_name`",
+                      "name": "region_name"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "x": {
+                  "fieldName": "region_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(alert_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Sensor Alerts by Region"
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 12,
+            "x": 0,
+            "y": 26
+          },
+          "widget": {
+            "name": "weather-conditions",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_weather",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "COUNT(`weather_id`)",
+                      "name": "count(weather_id)"
+                    },
+                    {
+                      "expression": "`condition`",
+                      "name": "condition"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "angle": {
+                  "displayName": "Weather Days",
+                  "fieldName": "count(weather_id)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "displayName": "Condition",
+                  "fieldName": "condition",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Site Weather Conditions Mix"
+              },
+              "version": 3,
+              "widgetType": "pie"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 1,
+            "width": 12,
+            "x": 0,
+            "y": 32
+          },
+          "widget": {
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Work Order Detail\n",
+                "\n"
+              ]
+            },
+            "name": "section-detail"
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 12,
+            "x": 0,
+            "y": 33
           },
           "widget": {
             "name": "wo-dashboard",
@@ -470,6 +824,14 @@
                       "name": "work_date"
                     },
                     {
+                      "expression": "`planned_hours`",
+                      "name": "planned_hours"
+                    },
+                    {
+                      "expression": "`actual_hours`",
+                      "name": "actual_hours"
+                    },
+                    {
                       "expression": "`region_name`",
                       "name": "region_name"
                     }
@@ -499,6 +861,14 @@
                   {
                     "displayName": "Work Type",
                     "fieldName": "work_type"
+                  },
+                  {
+                    "displayName": "Planned Hours",
+                    "fieldName": "planned_hours"
+                  },
+                  {
+                    "displayName": "Actual Hours",
+                    "fieldName": "actual_hours"
                   },
                   {
                     "displayName": "Region",
@@ -571,28 +941,49 @@
                     }
                   ]
                 }
+              },
+              {
+                "name": "ds_weather_date",
+                "query": {
+                  "datasetName": "ds_weather",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`observed_date`",
+                      "name": "observed_date"
+                    }
+                  ]
+                }
               }
             ],
             "spec": {
               "encodings": {
                 "fields": [
                   {
+                    "displayName": "Work orders opened",
                     "fieldName": "work_date",
                     "queryName": "ds_work_date"
                   },
                   {
+                    "displayName": "Detected",
                     "fieldName": "detected_date",
                     "queryName": "ds_maint_date"
                   },
                   {
+                    "displayName": "Sensor day",
                     "fieldName": "sensor_date",
                     "queryName": "ds_sensor_date"
+                  },
+                  {
+                    "displayName": "Observed",
+                    "fieldName": "observed_date",
+                    "queryName": "ds_weather_date"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
-                "title": "Date Range"
+                "title": "Time range"
               },
               "version": 2,
               "widgetType": "filter-date-range-picker"
@@ -616,8 +1007,8 @@
                   "disaggregated": false,
                   "fields": [
                     {
-                      "expression": "`region_id`",
-                      "name": "region_id"
+                      "expression": "`region_name`",
+                      "name": "region_name"
                     }
                   ]
                 }
@@ -629,8 +1020,8 @@
                   "disaggregated": false,
                   "fields": [
                     {
-                      "expression": "`region_id`",
-                      "name": "region_id"
+                      "expression": "`region_name`",
+                      "name": "region_name"
                     }
                   ]
                 }
@@ -642,8 +1033,21 @@
                   "disaggregated": false,
                   "fields": [
                     {
-                      "expression": "`region_id`",
-                      "name": "region_id"
+                      "expression": "`region_name`",
+                      "name": "region_name"
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "ds_weather_region",
+                "query": {
+                  "datasetName": "ds_weather",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`region_name`",
+                      "name": "region_name"
                     }
                   ]
                 }
@@ -654,24 +1058,287 @@
                 "fields": [
                   {
                     "displayName": "Region",
-                    "fieldName": "region_id",
+                    "fieldName": "region_name",
                     "queryName": "ds_work_region"
                   },
                   {
                     "displayName": "Region",
-                    "fieldName": "region_id",
+                    "fieldName": "region_name",
                     "queryName": "ds_maint_region"
                   },
                   {
                     "displayName": "Region",
-                    "fieldName": "region_id",
+                    "fieldName": "region_name",
                     "queryName": "ds_sensor_region"
+                  },
+                  {
+                    "displayName": "Region",
+                    "fieldName": "region_name",
+                    "queryName": "ds_weather_region"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Region"
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 2,
+            "width": 4,
+            "x": 8,
+            "y": 0
+          },
+          "widget": {
+            "name": "filter-status",
+            "queries": [
+              {
+                "name": "ds_work_status",
+                "query": {
+                  "datasetName": "ds_work",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`status_code`",
+                      "name": "status_code"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "Status",
+                    "fieldName": "status_code",
+                    "queryName": "ds_work_status"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Work Order Status"
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 2,
+            "width": 4,
+            "x": 0,
+            "y": 2
+          },
+          "widget": {
+            "name": "filter-priority",
+            "queries": [
+              {
+                "name": "ds_work_priority",
+                "query": {
+                  "datasetName": "ds_work",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`priority`",
+                      "name": "priority"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "Priority",
+                    "fieldName": "priority",
+                    "queryName": "ds_work_priority"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Priority"
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 2,
+            "width": 4,
+            "x": 4,
+            "y": 2
+          },
+          "widget": {
+            "name": "filter-work-type",
+            "queries": [
+              {
+                "name": "ds_work_type",
+                "query": {
+                  "datasetName": "ds_work",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`work_type`",
+                      "name": "work_type"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "Work Type",
+                    "fieldName": "work_type",
+                    "queryName": "ds_work_type"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Work Type"
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 2,
+            "width": 4,
+            "x": 8,
+            "y": 2
+          },
+          "widget": {
+            "name": "filter-sensor-type",
+            "queries": [
+              {
+                "name": "ds_sensor_type",
+                "query": {
+                  "datasetName": "ds_sensor",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`sensor_type`",
+                      "name": "sensor_type"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "Sensor Type",
+                    "fieldName": "sensor_type",
+                    "queryName": "ds_sensor_type"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Sensor Type"
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 2,
+            "width": 6,
+            "x": 0,
+            "y": 4
+          },
+          "widget": {
+            "name": "filter-event-type",
+            "queries": [
+              {
+                "name": "ds_maint_event",
+                "query": {
+                  "datasetName": "ds_maint",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`event_type`",
+                      "name": "event_type"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "Event Type",
+                    "fieldName": "event_type",
+                    "queryName": "ds_maint_event"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Maintenance Event Type"
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 2,
+            "width": 6,
+            "x": 6,
+            "y": 4
+          },
+          "widget": {
+            "name": "filter-root-cause",
+            "queries": [
+              {
+                "name": "ds_maint_root",
+                "query": {
+                  "datasetName": "ds_maint",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`root_cause`",
+                      "name": "root_cause"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "fields": [
+                  {
+                    "displayName": "Root Cause",
+                    "fieldName": "root_cause",
+                    "queryName": "ds_maint_root"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Root Cause"
               },
               "version": 2,
               "widgetType": "filter-multi-select"
@@ -687,16 +1354,20 @@
   "uiSettings": {
     "theme": {
       "canvasBackgroundColor": {
-        "dark": "#1F272D",
-        "light": "#FCFCFC"
+        "light": "#FCFCFC",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
       },
       "fontColor": {
-        "dark": "#E8ECF0",
-        "light": "#11171C"
+        "light": "#11171C",
+        "dark": "#E8ECF0"
       },
       "selectionColor": {
-        "dark": "#8ACAFF",
-        "light": "#2272B4"
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
       },
       "visualizationColors": [
         "#FFA600",
@@ -707,13 +1378,9 @@
         "#1D425C",
         "#99DDB4"
       ],
-      "widgetBackgroundColor": {
-        "dark": "#11171C",
-        "light": "#FFFFFF"
-      },
       "widgetBorderColor": {
-        "dark": "#11171C",
-        "light": "#FFFFFF"
+        "light": "#FFFFFF",
+        "dark": "#11171C"
       },
       "widgetHeaderAlignment": "LEFT"
     }
