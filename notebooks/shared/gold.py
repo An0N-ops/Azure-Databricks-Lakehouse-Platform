@@ -82,15 +82,33 @@ def gold_stream_source(
 
     Silver now enables the Change Data Feed, so a streaming read here lets Gold
     continue to update incrementally as Silver upserts rows, instead of a
-    full batch scan every run. The date dimension and aggregate facts are not
-    built from this path (see :func:`gold_source`).
+    full batch scan every run. The read must go through the Change Data Feed
+    explicitly: Silver applies ``apply_changes``-style SCD upserts (MERGE
+    commits), and a plain Delta streaming read of such a table aborts with
+    ``DELTA_SOURCE_TABLE_IGNORE_CHANGES`` every time Silver updates a row.
+    The date dimension and aggregate facts are not built from this path (see
+    :func:`gold_source`).
     """
-    df = spark.readStream.table(gold_manifest.resolve_source_table(spec, variables))
+    df = (
+        spark.readStream.format("delta")
+        .option("readChangeFeed", "true")
+        .table(gold_manifest.resolve_source_table(spec, variables))
+    )
     if spec["kind"] == "fact":
         date_key = spec.get("date_key")
         if date_key is not None:
             df = df.withColumn(DATE_KEY_ALIAS, date_key_expr(date_key["column"]))
-    return df
+    from pyspark.sql import functions as F
+
+    # A Change-Data-Feed read carries reserved metadata columns
+    # (_change_type/_commit_version/_commit_timestamp). Writing those into a
+    # CDF-enabled sink fails with RESERVED_CDC_COLUMNS_ON_WRITE, so strip them.
+    # Deletes are dropped: silver entities never hard-delete rows here, and a
+    # delete row written as an append would otherwise be re-inserted by
+    # apply_changes. Updates propagate as upsert rows to the Gold target.
+    return df.filter(F.col("_change_type") != "delete").drop(
+        "_change_type", "_commit_version", "_commit_timestamp"
+    )
 
 
 def _aggregation_expr(measure: Mapping[str, str]) -> Any:
