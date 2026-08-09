@@ -114,4 +114,10 @@ __builtins__.pyi
 # Databricks Asset Bundle per-developer overrides (never committed)
 bundle/databricks.local.yml
 
+# LaTeX build artifacts (resume)
+*.aux
+*.log
+*.out
+credentials/resume/*.pdf
+
 .databricks
