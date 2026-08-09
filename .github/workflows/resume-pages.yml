@@ -29,6 +29,20 @@ jobs:
         run: |
           mkdir -p site/resume
           cp credentials/resume/resume.html site/resume/index.html
+          cat > site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+          <meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=./resume/">
+          <title>Gaurav Sahu — Azure Data Engineer | Data Platform Consultant</title>
+          <script>location.replace('./resume/');</script>
+          </head>
+          <body>
+          <p>Resume: <a href="./resume/">Gaurav Sahu — Azure Data Engineer | Data Platform Consultant</a></p>
+          </body>
+          </html>
+          EOF
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
