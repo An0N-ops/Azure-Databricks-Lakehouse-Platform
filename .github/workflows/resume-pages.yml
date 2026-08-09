@@ -1,0 +1,48 @@
+name: Publish Resume to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'credentials/resume/**'
+      - '.github/workflows/resume-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Prepare Resume Page
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Stage Resume as Site Index
+        run: |
+          mkdir -p site/resume
+          cp credentials/resume/resume.html site/resume/index.html
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
