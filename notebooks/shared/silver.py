@@ -2,9 +2,13 @@
 
 Silver tables read their Bronze counterpart, apply declarative per-column
 conforming rules, add the ``_updated_at`` audit column, and upsert by natural
-key (SCD Type 1) via ``dlt.apply_changes``. PySpark/DLT imports stay inside
-functions so the module imports and lints without a Spark runtime; the Silver
-test strategy is pure Python against the manifests (see docs/development.md).
+key via ``dlt.apply_changes``. Tables default to SCD Type 1; a manifest spec
+can opt into SCD Type 2 with ``"scd_type": 2`` plus a ``track_by`` column list
+(spec declares which attributes drive a new historical version). The SCD2
+behavior is pinned by the pure-Python oracle in :mod:`notebooks.shared.scd2`
+(see tests/test_scd2.py). PySpark/DLT imports stay inside functions so the
+module imports and lints without a Spark runtime; the Silver test strategy is
+pure Python against the manifests (see docs/development.md).
 """
 
 from __future__ import annotations
@@ -81,7 +85,7 @@ def register_silver(
     target_schema: str = "silver",
     variables: Mapping[str, str] | None = None,
 ) -> Any:
-    """Register a Silver table: conformed source prep table + SCD Type 1 upsert.
+    """Register a Silver table: conformed source prep table + SCD upsert.
 
     The prep table carries the spec's DLT expectations under the Bronze-to-
     Silver retain policy (ADR-005): violating rows are kept and flagged in the
@@ -93,6 +97,14 @@ def register_silver(
     tracks every insert/update/delete in Bronze. The SCD target enables the
     Change Data Feed as well, so Gold can ingest Silver's own change commits
     incrementally instead of snapshotting the table.
+
+    Slowly changing dimensions: tables are SCD Type 1 by default. When the
+    spec declares ``scd_type: 2`` it must also declare ``track_by``, the list
+    of conformed attributes whose change opens a new historical version (the
+    DLT ``stored_as_scd_type=2`` + ``track_by`` pattern). Repeated records
+    with identical tracked attributes update nothing; untracked attributes
+    update the current version in place. The semantics contract is pinned by
+    :func:`notebooks.shared.scd2.apply_scd2`.
 
     Targets are schema-qualified (``{target_schema}.{name}``) so a single DLT
     pipeline can span the bronze/silver/gold schemas.
@@ -127,9 +139,23 @@ def register_silver(
         comment=f"Silver {spec['name']} target (CDC)",
         table_properties={"delta.enableChangeDataFeed": "true"},
     )
-    dlt.apply_changes(
-        target=target_name,
-        source=prep_name,
-        keys=list(spec["keys"]),
-        sequence_by="_ingested_at",
-    )
+    scd_type = int(spec.get("scd_type", 1))
+    if scd_type == 2:
+        dlt.apply_changes(
+            target=target_name,
+            source=prep_name,
+            keys=list(spec["keys"]),
+            sequence_by="_ingested_at",
+            ignore_null_keys=True,
+            track_by=list(spec["track_by"]),
+            stored_as_scd_type=2,
+        )
+    else:
+        dlt.apply_changes(
+            target=target_name,
+            source=prep_name,
+            keys=list(spec["keys"]),
+            sequence_by="_ingested_at",
+            ignore_null_keys=True,
+            stored_as_scd_type=1,
+        )
