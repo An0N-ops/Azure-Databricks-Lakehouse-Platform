@@ -24,10 +24,17 @@ per spec:
 - **Conforming rules** are a small declarative vocabulary (`trim`, `lower`,
   `upper`, `initcap`, `coalesce`, `cast`) applied in declaration order
   (`notebooks/shared/silver.py`), so column hygiene is reviewable as data.
-- **SCD Type 1 upsert**: each table is the target of `dlt.apply_changes`,
-  sequenced by `_ingested_at`, so reprocessing Bronze is idempotent and the
-  latest state is maintained. Rows with null keys are ignored by the upsert
-  (`ignore_null_keys`) but remain visible in Bronze.
+- **SCD upserts** via `dlt.apply_changes`, sequenced by `_ingested_at`:
+  reprocessing Bronze is idempotent and the latest state is maintained.
+  Tables default to **SCD Type 1** (`keys` only); a spec opts into **SCD
+  Type 2** with `"scd_type": 2` and `track_by` — the list of lifecycle
+  attributes whose change closes the current version and opens a new one
+  (DLT `stored_as_scd_type=2`). Tracked attributes unchanged: the change is
+  absorbed into the current version; repeated identical records create no
+  history. The semantics are pinned as a pure-Python oracle in
+  `notebooks/shared/scd2.py` (tests in `tests/test_scd2.py`). Rows with null
+  keys are ignored by the upsert (`ignore_null_keys`) but remain visible in
+  Bronze.
 - **Audit columns**: Bronze provenance metadata is retained and `_updated_at`
   is added per `docs/development.md`.
 - **Quality policy**: the Bronze-to-Silver boundary uses the ADR-005 **retain**
@@ -53,18 +60,24 @@ per spec:
 ## Implementation
 
 - `pipelines/energy/silver_manifest.json` — declarative table specs (source,
-  `keys`, `conform` rules, expectations).
+  `keys`, optional `scd_type`/`track_by` for SCD Type 2, `conform` rules,
+  expectations).
 - `notebooks/shared/silver_manifest.py` — pure-Python validation (conforming
-  vocabulary, cast types, key/column pinning to the generator pack) and
-  placeholder resolution.
+  vocabulary, cast types, SCD typing rules, key/column pinning to the
+  generator pack) and placeholder resolution.
+- `notebooks/shared/scd2.py` — pure-Python SCD Type 2 semantics oracle used
+  by the test suite to pin the behavior the DLT engine must produce.
 - `notebooks/shared/silver.py` — PySpark helpers: `apply_conform`,
   `with_updated_at`, `conformed_bronze`, `register_silver` (conformed prep
-  table + `dlt.apply_changes` SCD Type 1 upsert).
+  table + `dlt.apply_changes` SCD upsert, SCD Type 1 or 2 from the spec).
 - `notebooks/silver/transform_energy.py` — the data-driven DLT pipeline
   notebook.
 - `tests/test_silver_manifest.py` — pins the manifest to both the Bronze
   manifest (every source exists) and the generator pack (keys and conformed
   columns are generated).
+- `tests/test_scd2.py` — SCD Type 2 semantics (initial version, close/open,
+  current flag, repeated-record no-op) and manifest wiring (only `customers`
+  and `assets` opt in; `track_by` columns must exist and be conformed).
 
 As with Bronze, the Energy pack is the reference implementation; the conforming
 framework itself is domain-agnostic.

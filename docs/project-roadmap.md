@@ -2,7 +2,7 @@
 
 ## Strategic Vision
 
-The platform roadmap is a 5-phase engineering trajectory. Phases 1 and 2 are complete; implementation of the remaining phases is tracked here.
+The platform roadmap is a 5-phase engineering trajectory. Phases 1 and 2 are complete, Phase 3 (the medallion pipelines) is implemented and executing against a live workspace, and the remaining phases are tracked here.
 
 ---
 
@@ -24,8 +24,9 @@ gantt
     Bronze Ingestion Framework      :done, p3_1, 2026-08-15, 2026-08-22
     Silver Conformed Transformations :done, p3_2, 2026-08-20, 2026-08-28
     Gold Star Schema & DLT          :done, p3_3, 2026-08-25, 2026-09-02
+    Demo Runbook & Evidence         :done, p3_4, 2026-09-02, 2026-09-04
     section Phase 4: Observability
-    Gold Reporting Dashboards        :active, p4_0, 2026-09-01, 2026-09-10
+    Gold Reporting Dashboards        :done, p4_0, 2026-09-01, 2026-09-10
     System Tables & Log Analytics   : p4_1, 2026-09-01, 2026-09-08
     Data Quality & Alerting         : p4_2, 2026-09-05, 2026-09-12
     section Phase 5: CI/CD & Production
@@ -50,36 +51,62 @@ gantt
 - [x] AzureRM provider upgraded to `~> 5.0` with regenerated lock files.
 
 ### Phase 3: Medallion Data Pipelines & Delta Live Tables (Implemented)
-- [x] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion (Oracle Fusion ERP, SFTP, REST APIs). Framework delivered: declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`); wiring to real Oracle/SFTP/REST sources remains Phase 3.
-- [x] Silver layer conformed transformations, SCD Type 1/2 tracking, and schema validation. Framework delivered: declarative Silver manifest (`pipelines/energy/silver_manifest.json`), conforming helpers (`notebooks/shared/silver.py`), and a data-driven DLT notebook (`notebooks/silver/transform_energy.py`) using SCD Type 1 upserts; SCD Type 2 tracking remains Phase 3.
-- [x] Gold layer star schema modeling (`fact_sales`, `dim_customer_360`, `kpi_financials`). Framework delivered: declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with Kimball dimensions, a generated date dimension, and facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); and a data-driven DLT notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations. ABI dashboards and SQL Serverless models remain Phase 4.
+- [x] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion. Declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`). Reference sources are the synthetic generator's landing files; Oracle/SFTP/REST wiring is out of scope for this reference platform.
+- [x] Silver layer conformed transformations, SCD Type 1 **and** SCD Type 2, and schema validation. Declarative Silver manifest (`pipelines/energy/silver_manifest.json`), conforming helpers (`notebooks/shared/silver.py`), and a data-driven DLT notebook (`notebooks/silver/transform_energy.py`). Tables default to SCD Type 1 upserts; `customers` and `assets` opt into SCD Type 2 (``track_by`` + ``stored_as_scd_type=2``) to preserve historical versions of lifecycle attributes. The SCD2 semantics contract is pinned in pure Python by `notebooks/shared/scd2.py` + `tests/test_scd2.py`, so CI verifies the behavior DLT must produce (initial version, close/open on tracked change, one current version, no history on repeats).
+- [x] Gold layer star schema modeling. Declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with 9 Kimball dimensions, a generated date dimension, and 4 facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); a data-driven DLT notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations.
+- [x] Gold reporting dashboards (Databricks AI/BI / Lakeview) deployed from the Databricks Asset Bundle (`bundle/resources/energy_operations.dashboard.yml` + `bundle/src/energy_operations.lvdash.json`) on top of the Gold star schema. **NorthGrid Energy Operations** is deployed and live in dev.
 
-### Phase 4: Monitoring, Observability, Dashboards & Data Quality (In Progress)
-- [ ] Gold reporting dashboards (Databricks AI/BI / Lakeview) deployed from the Databricks Asset Bundle (`bundle/resources/energy_operations.dashboard.yml` + `bundle/src/energy_operations.lvdash.json`) on top of the Gold star schema. In progress: NorthGrid Energy Operations live in dev.
+### Phase 4: Monitoring, Observability & Data Quality (Not Started)
 - [ ] Databricks System Tables queries for billing, cluster performance, and audit tracking.
-- [ ] Integration with Azure Log Analytics workspace and Grafana / Databricks SQL dashboards.
+- [ ] Integration with Azure Log Analytics workspace and Databricks SQL dashboards.
 - [ ] DLT event log parsing and Slack / Microsoft Teams incident alerting.
 
-### Phase 5: End-to-End Release & Production Readiness (Target Phase 5)
-- [x] Databricks Asset Bundle packaging for the DLT pipelines (`bundle/databricks.yml`, targets `dev`/`qa`/`prod`) with a branch-driven `Databricks Bundle CI/CD` workflow and offline structural validation (`scripts/validate_bundle.py`); live workspace validate/deploy steps are gated on credentials and become active with OIDC below.
+### Phase 5: End-to-End Release & Production Readiness (In Progress)
+- [x] Databricks Asset Bundle packaging for the DLT pipelines and dashboard (`bundle/databricks.yml`, targets `dev`/`qa`/`prod`) with a branch-driven `Databricks Bundle CI/CD` workflow and offline structural validation (`scripts/validate_bundle.py`); live workspace validate/deploy steps are gated on credentials and become active with OIDC below.
+- [x] Workspace deployment through Databricks Asset Bundles: the `energy_lakehouse` pipeline executes successfully against a live workspace and the AI/BI dashboard is deployed on the resulting data.
 - [ ] GitHub Actions OIDC automated Terraform deployment pipelines (`plan` on PR, `apply` on merge).
 - [ ] Automated notebook integration test execution against Databricks staging workspace.
-- [ ] Platform operational runbooks and performance benchmarks.
+- [ ] Platform operational runbooks (demo runbook shipped at `docs/demo/runbook.md`; production runbooks remain) and performance benchmarks (Milestone C below).
 
 ---
 
 ## Release Strategy
 
-Every release corresponds to implemented functionality. Documentation-only releases stop at v0.2.0; milestones below are indicative and evolve as implementation progresses.
+Every release corresponds to implemented functionality. The next release is
+the **End-to-End Lakehouse Reference Implementation** (candidate `v0.3.0`):
+the platform is working software — data generation through deployed dashboards —
+rather than a design repository.
 
-| Version | Milestone | Content |
-| ------- | --------- | ------- |
-| v0.2.0 | Foundation Complete | Architecture decisions, Terraform IaC, CI/CD, consolidated documentation. *(current)* |
-| v0.3.0 | Terraform Infrastructure | First end-to-end apply; Databricks NSG rule set; workspace validation. |
-| v0.4.0 | Bronze Layer Implementation | Auto Loader ingestion for Oracle ERP, SFTP, and REST sources. |
-| v0.5.0 | Silver Layer & CDC | Conformed transformations, SCD Type 1/2, change data capture. |
-| v0.6.0 | Gold Layer & Business Models | Star-schema models and business analytics tables. |
-| v0.7.0 | Monitoring & Data Quality | System tables, DLT event logs, alerting, dashboards. |
-| v0.8.0 | CI/CD & Deployment | OIDC automated plan/apply pipelines. |
-| v0.9.0 | Performance Optimization | Cluster tuning, Photon, lifecycle and cost controls. |
-| v1.0.0 | Enterprise Lakehouse Platform | Production-ready platform. |
+| Version | Milestone | Content | Status |
+| ------- | --------- | ------- | ------ |
+| v0.2.0 | Foundation Complete | Architecture decisions, Terraform IaC, CI/CD, consolidated documentation. | Released 2026-08-02 |
+| **v0.3.0** | **End-to-End Lakehouse Reference Implementation** | Synthetic enterprise data generator, Energy reference implementation, Bronze/Silver/Gold with SCD Type 1 **and** SCD Type 2, quality expectations, Databricks Asset Bundles deployment, CI/CD, 138 tests, deployed AI/BI dashboard, demo runbook. | **Candidate** — next release (see CHANGELOG) |
+| v0.4.0 | Observability Foundation | Pipeline run metrics, run/task visibility, freshness, basic alerts (Milestone A). | Planned |
+| v0.5.0 | Data Quality Failure Scenarios | Controlled bad-data demos: expectation → event log → operator visibility (Milestone B). | Planned |
+| v0.6.0 | Performance / Cost Analysis | Baseline vs optimized measurements on real runs (Milestone C). | Planned |
+| v0.7.0 | Production Readiness Review | Security/identity/networking/secrets/CI/CD/testing/quality/observability/cost/scalability/recovery review (Milestone D). | Planned |
+| v1.0.0 | Enterprise Lakehouse Platform | Depends on the Milestone E decision; not calendar-driven. | Deferred |
+
+## Future Milestone Backlog
+
+Purpose: a deliberate, meaningful cadence rather than feature sprawl. Each
+milestone is a full engineering unit; none are scheduled as weekly
+deliverables.
+
+- **Milestone A — Observability foundation**: pipeline run metrics, task/run
+  visibility, operational metadata, execution duration, row counts, failure
+  visibility, freshness, basic alerts — Databricks-native capabilities only.
+- **Milestone B — Data quality failure scenarios**: controlled bad-data
+  inputs (invalid FK, null required field, invalid domain value, duplicate
+  business key, malformed record) demonstrating bad input → quality
+  expectation → visibility/event log → operator identifies the issue.
+- **Milestone C — Performance / cost analysis**: a small measurable
+  optimization exercise (partitioning, file sizes, clustering, unnecessary
+  scans, compute sizing) with only actually-executed measurements.
+- **Milestone D — Production readiness review**: structured findings over
+  security, identity, networking, secrets, CI/CD, testing, data quality,
+  observability, cost, scalability, recovery, operational ownership.
+- **Milestone E — Phase 4 / advanced capabilities**: only after A–D, based on
+  portfolio and consulting value. No technology additions (Kafka, dbt,
+  Airflow, Snowflake, Power BI, Grafana, Kubernetes, ML pipelines, GenAI)
+  without an explicit architecture decision.

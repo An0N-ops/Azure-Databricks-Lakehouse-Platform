@@ -28,6 +28,7 @@ SUPPORTED_CONFORM_RULES = frozenset({"trim", "lower", "upper", "initcap", "coale
 SUPPORTED_CAST_TYPES = frozenset(
     {"string", "boolean", "integer", "long", "double", "date", "timestamp"}
 )
+SUPPORTED_SCD_TYPES = frozenset({1, 2})
 DEFAULT_SCHEMA = "silver"
 
 _TABLE_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -105,6 +106,31 @@ def _validate_table(
     if not isinstance(keys, list) or not keys or not all(isinstance(k, str) and k for k in keys):
         raise ManifestError(f"tables[{index}].keys must be a non-empty list of column names")
 
+    scd_type = table.get("scd_type", 1)
+    try:
+        scd_type = int(scd_type)
+    except (TypeError, ValueError):
+        raise ManifestError(f"tables[{index}].scd_type must be 1 or 2")
+    if scd_type not in SUPPORTED_SCD_TYPES:
+        raise ManifestError(
+            f"tables[{index}].scd_type '{scd_type}' is not supported "
+            f"(expected one of {sorted(SUPPORTED_SCD_TYPES)})"
+        )
+
+    track_by = table.get("track_by")
+    if scd_type == 2:
+        if (
+            not isinstance(track_by, list)
+            or not track_by
+            or not all(isinstance(col, str) and col for col in track_by)
+        ):
+            raise ManifestError(
+                f"tables[{index}].track_by must be a non-empty list of column names "
+                "when scd_type is 2"
+            )
+    elif track_by is not None:
+        raise ManifestError(f"tables[{index}].track_by is only allowed with scd_type 2")
+
     conform = table.get("conform", {})
     if not isinstance(conform, Mapping):
         raise ManifestError(f"tables[{index}].conform must be an object")
@@ -148,6 +174,11 @@ def _validate_table(
             if key not in entity_columns:
                 raise ManifestError(
                     f"tables[{index}].keys entry '{key}' is not a column of '{name}'"
+                )
+        for column in track_by or []:
+            if column not in entity_columns:
+                raise ManifestError(
+                    f"tables[{index}].track_by column '{column}' is not a column of '{name}'"
                 )
 
     for column, rules in conform.items():

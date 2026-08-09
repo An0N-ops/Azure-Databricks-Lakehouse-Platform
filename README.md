@@ -78,6 +78,7 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 | Area | Document |
 | ---- | -------- |
 | Architecture | [`docs/architecture.md`](docs/architecture.md) — components, Medallion zones, Unity Catalog model |
+| Demo & Evidence | [`docs/demo/README.md`](docs/demo/README.md) — evidence checklist; [`docs/demo/runbook.md`](docs/demo/runbook.md) — end-to-end runbook |
 | Deployment | [`docs/deployment.md`](docs/deployment.md) — bootstrap, environments, OIDC plan |
 | Development | [`docs/development.md`](docs/development.md) — local setup, Databricks Connect, PySpark/SQL standards |
 | Security | [`docs/security.md`](docs/security.md) — governance model; [`SECURITY.md`](SECURITY.md) — policy + implemented/planned posture |
@@ -89,15 +90,15 @@ Full deployment steps, prerequisites, and the OIDC CI/CD plan are in [`docs/depl
 
 ## Roadmap
 
-Releases track implemented functionality. **v0.2.0 — Foundation Complete** covers Phases 1–2; everything below is upcoming implementation work.
+Releases track implemented functionality. **v0.2.0 — Foundation Complete** covered Phases 1–2; the medallion platform is now implemented and executing (candidate **v0.3.0 — End-to-End Lakehouse Reference Implementation**).
 
 - **Phase 1 (done)** — repo skeleton, governance, CI workflows.
 - **Phase 2 (done)** — Terraform IaC: bootstrap, modules, Unity Catalog, `dev`/`qa`/`prod`, azurerm 5.0.
-- **Phase 3 (implemented)** — Medallion pipelines: Bronze ingestion, Silver DLT, and Gold star schema delivered.
-- **Phase 4 (in progress)** — monitoring, data quality, dashboards.
-- **Phase 5** — OIDC automated deployment and production readiness.
+- **Phase 3 (done)** — Medallion pipelines: Bronze Auto Loader ingestion, Silver DLT with SCD Type 1 and SCD Type 2 (`customers`, `assets`), Gold star-schema models, all deployed and executing via Databricks Asset Bundles with a live AI/BI dashboard.
+- **Phase 4 (not started)** — observability, System Tables, data quality alerting.
+- **Phase 5 (partial)** — bundle deployment implemented and running; OIDC automated deployment and production readiness remain.
 
-See [`docs/project-roadmap.md`](docs/project-roadmap.md) for the detailed plan and release strategy.
+See [`docs/project-roadmap.md`](docs/project-roadmap.md) for the detailed plan, the demo runbook at [`docs/demo/runbook.md`](docs/demo/runbook.md), and the release strategy.
 
 ## Design Philosophy
 

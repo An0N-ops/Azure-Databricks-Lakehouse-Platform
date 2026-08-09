@@ -3,7 +3,7 @@
     "pipeline": "energy_lakehouse",
     "industry": "energy",
     "version": "1.0.0",
-    "description": "Silver conformed entities for the NorthGrid Resources Energy pack. Each table reads its Bronze counterpart, normalizes string fields, enforces quality expectations, and upserts by its natural key (SCD Type 1)."
+    "description": "Silver conformed entities for the NorthGrid Resources Energy pack. Each table reads its Bronze counterpart, normalizes string fields, enforces quality expectations, and upserts by its natural key. Tables default to SCD Type 1; customers and assets opt into SCD Type 2 (track_by) so historical attribute versions are preserved."
   },
   "schema": "silver",
   "tables": [
@@ -107,9 +107,11 @@
     },
     {
       "name": "customers",
-      "description": "Conformed customer entities.",
+      "description": "Conformed customer entities; SCD Type 2 history on account status and credit rating.",
       "primary_key": "customer_id",
       "keys": ["customer_id"],
+      "scd_type": 2,
+      "track_by": ["account_status", "credit_rating"],
       "source": {
         "table": "{catalog}.bronze.customers"
       },
@@ -151,9 +153,11 @@
     },
     {
       "name": "assets",
-      "description": "Conformed physical assets tracked for operations.",
+      "description": "Conformed physical assets tracked for operations; SCD Type 2 history on status and criticality.",
       "primary_key": "asset_id",
       "keys": ["asset_id"],
+      "scd_type": 2,
+      "track_by": ["asset_status", "criticality"],
       "source": {
         "table": "{catalog}.bronze.assets"
       },
