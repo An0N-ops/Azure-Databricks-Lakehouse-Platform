@@ -1,12 +1,12 @@
 """Pure-Python reference semantics for SCD Type 2 on Silver tables.
 
 This module is the **test oracle** for the platform's SCD2 pattern. At runtime
-DLT materializes the same behavior with ``dlt.apply_changes`` using
-``track_by`` and ``stored_as_scd_type=2`` (see
-:func:`notebooks.shared.silver.register_silver`). The DLT engine is the only
-runtime implementation; this module exists so the *semantics* are reviewable
-and pinable in pure Python, which is the repository's CI test strategy for
-the declarative layers (docs/development.md).
+Lakeflow materializes the same behavior with ``dp.create_auto_cdc_flow`` using
+``track_history_column_list`` and ``stored_as_scd_type=2`` (see
+:func:`notebooks.shared.silver.register_silver`). The Lakeflow engine is the
+only runtime implementation; this module exists so the *semantics* are
+reviewable and pinable in pure Python, which is the repository's CI test
+strategy for the declarative layers (docs/development.md).
 
 Semantics contract:
 

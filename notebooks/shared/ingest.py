@@ -1,9 +1,10 @@
 """Shared PySpark helpers for Bronze Auto Loader ingestion.
 
-These helpers are consumed by DLT notebooks under ``notebooks/bronze/``. They
-keep PySpark and DLT imports inside functions so the module can be imported and
-linted without a Spark runtime — the Bronze test strategy is pure Python and
-exercises :mod:`notebooks.shared.bronze_manifest` only (see docs/development.md).
+These helpers are consumed by Lakeflow notebooks under ``notebooks/bronze/``.
+They keep PySpark and Lakeflow imports inside functions so the module can be
+imported and linted without a Spark runtime — the Bronze test strategy is pure
+Python and exercises :mod:`notebooks.shared.bronze_manifest` only (see
+docs/development.md).
 """
 
 from __future__ import annotations
@@ -80,27 +81,27 @@ def bronze_stream(
 
 
 def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str = "drop") -> Any:
-    """Apply a spec's DLT quality expectations to a table function.
+    """Apply a spec's Lakeflow quality expectations to a table function.
 
     Each expectation in ``spec["expectations"]`` is applied in declaration
     order so violations are reported with the manifest-provided name.
 
-    ``on_violation`` selects the DLT boundary policy (ADR-005):
+    ``on_violation`` selects the Lakeflow boundary policy (ADR-005):
     ``"drop"`` (default) drops violating rows, ``"retain"`` keeps them and
-    records the violation in the DLT event log (the Bronze-to-Silver policy),
-    and ``"fail"`` aborts the update (the Gold policy).
+    records the violation in the pipeline event log (the Bronze-to-Silver
+    policy), and ``"fail"`` aborts the update (the Gold policy).
     """
-    import dlt
+    from pyspark import pipelines as dp
 
     if on_violation not in ("drop", "retain", "fail"):
         raise ValueError(f"unsupported on_violation policy: {on_violation}")
 
     if on_violation == "drop":
-        decorator = dlt.expect_or_drop
+        decorator = dp.expect_or_drop
     elif on_violation == "retain":
-        decorator = dlt.expect
+        decorator = dp.expect
     else:
-        decorator = dlt.expect_or_fail
+        decorator = dp.expect_or_fail
     for expectation in spec.get("expectations", []):
         func = decorator(expectation["name"], expectation["constraint"])(func)
     return func
@@ -109,25 +110,27 @@ def apply_expectations(func: Any, spec: Mapping[str, Any], *, on_violation: str 
 CDF_PROPERTY = "delta.enableChangeDataFeed"
 
 
-def dlt_bronze_table(
+def dp_bronze_table(
     spec: Mapping[str, Any],
     *,
     target_schema: str = "bronze",
     variables: Mapping[str, str] | None = None,
     commit_id: str | None = None,
 ) -> Any:
-    """Register a DLT Bronze table for a manifest table spec.
+    """Register a Lakeflow Bronze streaming table for a manifest table spec.
 
     The target is the schema-qualified ``"{target_schema}.{name}"`` so a single
-    DLT pipeline can own tables across schemas (bronze/silver/gold). DLT derives
-    the fully-qualified name as ``{catalog}.{schema}.{table}``.
+    pipeline can own tables across schemas (bronze/silver/gold). Lakeflow
+    derives the fully-qualified name as ``{catalog}.{schema}.{table}``.
 
-    Change Data Feed is enabled on every Bronze table (``delta.enableChangeDataFeed =
-    true``) so downstream Silver/Gold flows can consume inserts, updates, and
-    deletes instead of failing on non-append source commits (the standard
+    The function returns an Auto Loader streaming DataFrame, so
+    ``@dp.table`` materializes a streaming table. Change Data Feed is enabled on
+    every Bronze table (``delta.enableChangeDataFeed = true``) so downstream
+    Silver/Gold flows can consume inserts, updates, and deletes instead of
+    failing on non-append source commits (the standard
     ``DELTA_SOURCE_TABLE_IGNORE_CHANGES`` mitigation).
     """
-    import dlt
+    from pyspark import pipelines as dp
 
     target_name = f"{target_schema}.{spec['name']}"
 
@@ -141,10 +144,8 @@ def dlt_bronze_table(
             commit_id=commit_id,
         )
 
-    _ingest.__name__ = target_name
-    _ingest.__doc__ = spec.get("description")
     return apply_expectations(
-        dlt.table(
+        dp.table(
             name=target_name,
             comment=spec.get("description", ""),
             table_properties={CDF_PROPERTY: "true"},

@@ -46,4 +46,4 @@ MANIFEST = bronze_manifest.load_manifest(ROOT / "pipelines" / "energy" / "bronze
 SPECS = bronze_manifest.table_specs(MANIFEST)
 
 for spec in SPECS:
-    ingest.dlt_bronze_table(spec, target_schema=MANIFEST.get("schema", "bronze"))
+    ingest.dp_bronze_table(spec, target_schema=MANIFEST.get("schema", "bronze"))

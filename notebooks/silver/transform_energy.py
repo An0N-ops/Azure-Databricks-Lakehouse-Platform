@@ -1,11 +1,11 @@
-"""Silver DLT pipeline for the Energy industry pack.
+"""Silver Lakeflow pipeline for the Energy industry pack.
 
-Declaratively registers one conformed Silver table per entity defined in
-``pipelines/energy/silver_manifest.json`` (ADR-004, ADR-005). Each table reads
-its Bronze counterpart, normalizes fields, drops rows that violate quality
-expectations, and upserts by natural key (SCD Type 1) via
-``dlt.apply_changes``. Placeholders resolve from environment variables so this
-notebook runs unchanged in dev, qa, and prod.
+Declaratively registers one conformed Silver streaming table per entity defined
+in ``pipelines/energy/silver_manifest.json`` (ADR-004, ADR-005). Each table
+reads its Bronze counterpart, normalizes fields, drops rows that violate
+quality expectations, and upserts by natural key (SCD Type 1) via
+``dp.create_auto_cdc_flow``. Placeholders resolve from environment variables
+so this notebook runs unchanged in dev, qa, and prod.
 """
 
 import sys
