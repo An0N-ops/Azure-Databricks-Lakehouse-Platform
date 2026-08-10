@@ -1,13 +1,22 @@
 """Shared PySpark helpers for Gold star-schema models (ADR-005).
 
-Gold tables are registered from a declarative manifest. Dimensions read their
-Silver source and enforce fail-on-violation expectations. The date dimension is
-generated from a declared date range. Facts read a Silver source, derive an
-integer ``date_key`` (``YYYYMMDD``) from a timestamp/date column, and may
-aggregate measures at a declared grain (e.g. daily sensor telemetry). PySpark
-and DLT imports stay inside functions so the module imports and lints without
-a Spark runtime — the Gold test strategy is pure Python against the manifests
-(see docs/development.md).
+Gold tables are registered from a declarative manifest. Dimensions and
+non-aggregate facts are **streaming tables**: a ``@dp.temporary_view`` reads
+the Silver source's Change Data Feed, ``dp.create_streaming_table`` creates the
+empty target, and ``dp.create_auto_cdc_flow`` (SCD Type 1) upserts changes and
+propagates deletes. Silver is written by ``create_auto_cdc_flow`` (MERGE
+commits), so a plain streaming read would abort with
+``DELTA_SOURCE_TABLE_IGNORE_CHANGES``; reading the change feed is the supported
+way to propagate Silver commits into Gold incrementally.
+
+The date dimension is generated from a declared date range and the aggregate
+fact (``fact_sensor_daily``) collapses measures at a declared grain — both are
+``@dp.materialized_view`` over a batch read, the Lakeflow pattern for
+aggregation over a change-fed source (a running streaming aggregation cannot
+correctly retract measures after upstream updates, so the materialized view
+recomputes from source state). PySpark and Lakeflow imports stay inside
+functions so the module imports and lints without a Spark runtime — the Gold
+test strategy is pure Python against the manifests (see docs/development.md).
 """
 
 from __future__ import annotations
@@ -45,8 +54,8 @@ def gold_source(
     derive ``date_key``; aggregate facts also collapse measures to the declared
     grain (``group_by`` + ``date_key``).
 
-    Returns a batch read; use :func:`gold_stream_source` for an incremental
-    streaming read of the source.
+    Returns a batch read; used by the materialized views (date dimension and
+    aggregate facts), which recompute from source state on refresh.
     """
 
     kind = spec["kind"]
@@ -78,36 +87,166 @@ def gold_source(
 def gold_stream_source(
     spark: Any, spec: Mapping[str, Any], *, variables: Mapping[str, str] | None = None
 ) -> Any:
-    """Read the Silver source as a streaming read for incremental Gold.
+    """Stream a spec's Silver source Change Data Feed into Gold.
 
-    Silver now enables the Change Data Feed, so a streaming read here lets Gold
-    continue to update incrementally as Silver upserts rows, instead of a
-    full batch scan every run. The read must go through the Change Data Feed
-    explicitly: Silver applies ``apply_changes``-style SCD upserts (MERGE
-    commits), and a plain Delta streaming read of such a table aborts with
-    ``DELTA_SOURCE_TABLE_IGNORE_CHANGES`` every time Silver updates a row.
-    The date dimension and aggregate facts are not built from this path (see
-    :func:`gold_source`).
+    Silver targets are AUTO CDC (MERGE) tables, which plain streaming reads
+    reject with ``DELTA_SOURCE_TABLE_IGNORE_CHANGES``; reading with
+    ``readChangeFeed = true`` yields one row per changed row with the CDF
+    metadata columns (``_change_type``, ``_commit_version``,
+    ``_commit_timestamp``). This view pre-cleans the feed before the AUTO CDC
+    flow interprets it:
+
+    * ``update_preimage`` rows are dropped — only the post-image matters.
+    * For SCD Type 2 Silver sources, the "expired version" post-image
+      (``update_postimage`` with ``__END_AT`` set) is dropped as well, so the
+      last applied row per business key is always the newest version's insert;
+      otherwise the AUTO CDC SCD1 upsert would be ambiguous between the expire
+      and the new-version insert of the same commit.
+    * The reserved SCD2 columns ``__START_AT`` / ``__END_AT`` are dropped (they
+      are physical columns of Silver SCD2 tables); AUTO CDC rejects
+      system-reserved column names in the flow source, so they must be removed
+      once the expiry filter has consumed ``__END_AT``.
+
+    CDF metadata columns are kept and excluded via ``except_column_list`` on
+    the flow; delete rows are applied via ``apply_as_deletes``. ``sequence_by``
+    uses ``_commit_timestamp`` so Gold applies changes in commit order.
     """
+    from pyspark.sql import functions as F
+
     df = (
         spark.readStream.format("delta")
         .option("readChangeFeed", "true")
         .table(gold_manifest.resolve_source_table(spec, variables))
+        .filter(F.col("_change_type") != "update_preimage")
     )
-    if spec["kind"] == "fact":
+    if "__END_AT" in df.columns:
+        df = df.filter(
+            ~((F.col("_change_type") == "update_postimage") & F.col("__END_AT").isNotNull())
+        ).drop("__END_AT", "__START_AT")
+
+    kind = spec["kind"]
+    if kind == "fact":
         date_key = spec.get("date_key")
         if date_key is not None:
             df = df.withColumn(DATE_KEY_ALIAS, date_key_expr(date_key["column"]))
+
+    return df
+
+
+def _gold_keys(spec: Mapping[str, Any]) -> list[str]:
+    """Return the AUTO CDC key columns for a spec's primary key."""
+    primary_key = spec["primary_key"]
+    return list(primary_key) if isinstance(primary_key, list) else [primary_key]
+
+
+def _register_streaming(
+    spec: Mapping[str, Any],
+    *,
+    target_name: str,
+    variables: Mapping[str, str] | None,
+) -> Any:
+    """Register a Gold dimension / fact table as a streaming AUTO CDC table."""
+    from pyspark import pipelines as dp
     from pyspark.sql import functions as F
 
-    # A Change-Data-Feed read carries reserved metadata columns
-    # (_change_type/_commit_version/_commit_timestamp). Writing those into a
-    # CDF-enabled sink fails with RESERVED_CDC_COLUMNS_ON_WRITE, so strip them.
-    # Deletes are dropped: silver entities never hard-delete rows here, and a
-    # delete row written as an append would otherwise be re-inserted by
-    # apply_changes. Updates propagate as upsert rows to the Gold target.
-    return df.filter(F.col("_change_type") != "delete").drop(
-        "_change_type", "_commit_version", "_commit_timestamp"
+    prep_name = f"gold_source_{spec['name']}"
+
+    def _prep() -> Any:
+        from pyspark.sql import SparkSession
+
+        return gold_stream_source(
+            SparkSession.getActiveSession(),
+            spec,
+            variables=variables,
+        )
+
+    apply_expectations(
+        dp.temporary_view(
+            name=prep_name,
+            comment=f"Silver source change feed for gold.{spec['name']}",
+        )(_prep),
+        spec,
+        on_violation="fail",
+    )
+    dp.create_streaming_table(
+        name=target_name,
+        comment=spec.get("description", ""),
+        table_properties=CHANGE_DATA_FEED,
+    )
+    dp.create_auto_cdc_flow(
+        target=target_name,
+        source=prep_name,
+        keys=_gold_keys(spec),
+        sequence_by="_commit_timestamp",
+        stored_as_scd_type="1",
+        apply_as_deletes=F.expr("_change_type = 'delete'"),
+        except_column_list=["_change_type", "_commit_version", "_commit_timestamp"],
+    )
+
+
+def _register_materialized(
+    spec: Mapping[str, Any],
+    *,
+    target_name: str,
+    variables: Mapping[str, str] | None,
+) -> Any:
+    """Register a Gold table as a materialized view over a batch read."""
+    from pyspark import pipelines as dp
+
+    def _source() -> Any:
+        from pyspark.sql import SparkSession
+
+        return gold_source(
+            SparkSession.getActiveSession(),
+            spec,
+            variables=variables,
+        )
+
+    return apply_expectations(
+        dp.materialized_view(
+            name=target_name,
+            comment=spec.get("description", ""),
+            table_properties=CHANGE_DATA_FEED,
+        )(_source),
+        spec,
+        on_violation="fail",
+    )
+
+
+def register_gold(
+    spec: Mapping[str, Any],
+    *,
+    target_schema: str = "gold",
+    variables: Mapping[str, str] | None = None,
+) -> Any:
+    """Register a Gold table with fail-on-violation expectations.
+
+    The target is the schema-qualified ``"{target_schema}.{name}"`` so a single
+    pipeline can own tables across the bronze/silver/gold schemas. The table
+    comment is the spec's description. Expectations use the Silver-to-Gold
+    **fail** policy (ADR-005): a change that violates a Gold quality contract
+    aborts the pipeline rather than silently producing a bad analytics table.
+
+    Dimensions and non-aggregate facts register as **streaming tables**
+    (temporary view over the Silver change feed + AUTO CDC flow, see
+    :func:`gold_stream_source`). The generated date dimension and the aggregate
+    fact register as **materialized views** (:func:`gold_source`): the
+    aggregation needs the source's complete state to compute correct sums (a
+    streaming aggregation cannot retract superseded readings), and the date
+    dimension has no Silver source at all.
+    """
+    target_name = f"{target_schema}.{spec['name']}"
+
+    if spec["kind"] == "date_dimension" or (spec["kind"] == "fact" and spec.get("aggregate")):
+        return _register_materialized(
+            spec,
+            target_name=target_name,
+            variables=variables,
+        )
+    return _register_streaming(
+        spec,
+        target_name=target_name,
+        variables=variables,
     )
 
 
@@ -131,94 +270,3 @@ def _aggregation_expr(measure: Mapping[str, str]) -> Any:
     else:  # pragma: no cover - guarded by manifest validation
         raise ValueError(f"unsupported aggregation '{aggregation}' for measure '{measure['as']}'")
     return expression.alias(measure["as"])
-
-
-def _gold_keys(spec: Mapping[str, Any]) -> list[str]:
-    """Normalize a Gold primary key to a list of CDC key columns."""
-    primary_key = spec["primary_key"]
-    return list(primary_key) if isinstance(primary_key, list) else [primary_key]
-
-
-def register_gold(
-    spec: Mapping[str, Any],
-    *,
-    target_schema: str = "gold",
-    variables: Mapping[str, str] | None = None,
-) -> Any:
-    """Register a Gold table with fail-on-violation DLT expectations.
-
-    The target is the schema-qualified ``"{target_schema}.{name}"`` so a single
-    DLT pipeline can own tables across the bronze/silver/gold schemas. The table
-    comment is the spec's description. Expectations use the Silver-to-Gold
-    **fail** policy (ADR-005): an update that violates a Gold quality contract
-    aborts the pipeline rather than silently producing a bad analytics table.
-
-    Dimensions and non-aggregate facts are registered as **streaming
-    Change Data Capture upserts**: a prep table reads the Silver Change Data
-    Feed and ``apply_changes`` mirrors Silver's updates/deletes into Gold
-    incrementally. The date dimension and aggregate facts stay materialized
-    views (a batch read over Silver), which is the standard for gold-layer
-    aggregations.
-    """
-    import dlt
-
-    target_name = f"{target_schema}.{spec['name']}"
-    kind = spec["kind"]
-
-    if kind == "date_dimension" or (kind == "fact" and spec.get("aggregate")):
-        # Materialized view path (also used for the generated date dimension)
-        def _source() -> Any:
-            from pyspark.sql import SparkSession
-
-            return gold_source(
-                SparkSession.getActiveSession(),
-                spec,
-                variables=variables,
-            )
-
-        _source.__name__ = target_name
-        _source.__doc__ = spec.get("description")
-        return apply_expectations(
-            dlt.table(
-                name=target_name,
-                comment=spec.get("description", ""),
-                table_properties=CHANGE_DATA_FEED,
-            )(_source),
-            spec,
-            on_violation="fail",
-        )
-
-    # Streaming CDC path: prep streams Silver's changes, target upserts SCD-1
-    prep_name = f"{target_schema}.gold_source_{spec['name']}"
-
-    def _prep() -> Any:
-        from pyspark.sql import SparkSession
-
-        return gold_stream_source(
-            SparkSession.getActiveSession(),
-            spec,
-            variables=variables,
-        )
-
-    _prep.__name__ = prep_name
-    _prep.__doc__ = f"Streaming Silver source for gold.{spec['name']}"
-    apply_expectations(
-        dlt.table(
-            name=prep_name,
-            comment=f"Streaming Silver source for gold.{spec['name']}",
-            table_properties=CHANGE_DATA_FEED,
-        )(_prep),
-        spec,
-        on_violation="fail",
-    )
-    dlt.create_streaming_table(
-        name=target_name,
-        comment=spec.get("description", ""),
-        table_properties=CHANGE_DATA_FEED,
-    )
-    dlt.apply_changes(
-        target=target_name,
-        source=prep_name,
-        keys=_gold_keys(spec),
-        sequence_by="_updated_at",
-    )

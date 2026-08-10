@@ -2,11 +2,11 @@
 
 Silver tables read their Bronze counterpart, apply declarative per-column
 conforming rules, add the ``_updated_at`` audit column, and upsert by natural
-key via ``dlt.apply_changes``. Tables default to SCD Type 1; a manifest spec
-can opt into SCD Type 2 with ``"scd_type": 2`` plus a ``track_by`` column list
-(spec declares which attributes drive a new historical version). The SCD2
+key via ``dp.create_auto_cdc_flow``. Tables default to SCD Type 1; a manifest
+spec can opt into SCD Type 2 with ``"scd_type": 2`` plus a ``track_by`` column
+list (spec declares which attributes drive a new historical version). The SCD2
 behavior is pinned by the pure-Python oracle in :mod:`notebooks.shared.scd2`
-(see tests/test_scd2.py). PySpark/DLT imports stay inside functions so the
+(see tests/test_scd2.py). PySpark/Lakeflow imports stay inside functions so the
 module imports and lints without a Spark runtime; the Silver test strategy is
 pure Python against the manifests (see docs/development.md).
 """
@@ -85,34 +85,35 @@ def register_silver(
     target_schema: str = "silver",
     variables: Mapping[str, str] | None = None,
 ) -> Any:
-    """Register a Silver table: conformed source prep table + SCD upsert.
+    """Register a Silver streaming table: conformed source view + AUTO CDC flow.
 
-    The prep table carries the spec's DLT expectations under the Bronze-to-
-    Silver retain policy (ADR-005): violating rows are kept and flagged in the
-    DLT event log rather than dropped. Rows with null keys are skipped by the
-    upsert (``ignore_null_keys``) so they never corrupt the SCD target, while
-    still being visible in Bronze.
+    The prep step is a ``@dp.temporary_view`` (not materialized) carrying the
+    spec's expectations under the Bronze-to-Silver retain policy (ADR-005):
+    violating rows are kept and flagged in the pipeline event log rather than
+    dropped (the documented "pre-filter without materializing" pattern).
 
-    The prep reads Bronze from its Change Data Feed (streaming), so Silver
-    tracks every insert/update/delete in Bronze. The SCD target enables the
-    Change Data Feed as well, so Gold can ingest Silver's own change commits
-    incrementally instead of snapshotting the table.
+    The view streams Bronze, so Silver tracks every insert/update in Bronze.
+    ``dp.create_streaming_table`` creates the empty SCD target, and
+    ``dp.create_auto_cdc_flow`` upserts into it by natural key ordered by
+    ``_ingested_at``. The SCD target enables the Change Data Feed as well, so
+    Gold can ingest Silver's own change commits incrementally instead of
+    snapshotting the table.
 
     Slowly changing dimensions: tables are SCD Type 1 by default. When the
     spec declares ``scd_type: 2`` it must also declare ``track_by``, the list
     of conformed attributes whose change opens a new historical version (the
-    DLT ``stored_as_scd_type=2`` + ``track_by`` pattern). Repeated records
-    with identical tracked attributes update nothing; untracked attributes
-    update the current version in place. The semantics contract is pinned by
-    :func:`notebooks.shared.scd2.apply_scd2`.
+    ``stored_as_scd_type=2`` + ``track_history_column_list`` pattern). Repeated
+    records with identical tracked attributes update nothing; untracked
+    attributes update the current version in place. The semantics contract is
+    pinned by :func:`notebooks.shared.scd2.apply_scd2`.
 
-    Targets are schema-qualified (``{target_schema}.{name}``) so a single DLT
+    Targets are schema-qualified (``{target_schema}.{name}``) so a single
     pipeline can span the bronze/silver/gold schemas.
     """
-    import dlt
+    from pyspark import pipelines as dp
 
     target_name = f"{target_schema}.{spec['name']}"
-    prep_name = f"{target_schema}.silver_source_{spec['name']}"
+    prep_name = f"silver_source_{spec['name']}"
 
     def _prep() -> Any:
         from pyspark.sql import SparkSession
@@ -123,39 +124,34 @@ def register_silver(
             variables=variables,
         )
 
-    _prep.__name__ = prep_name
-    _prep.__doc__ = f"Conformed Bronze source for silver.{spec['name']}"
     apply_expectations(
-        dlt.table(
+        dp.temporary_view(
             name=prep_name,
             comment=f"Conformed Bronze source for silver.{spec['name']}",
-            table_properties={"delta.enableChangeDataFeed": "true"},
         )(_prep),
         spec,
         on_violation="retain",
     )
-    dlt.create_streaming_table(
+    dp.create_streaming_table(
         name=target_name,
-        comment=f"Silver {spec['name']} target (CDC)",
+        comment=f"Silver {spec['name']} target (AUTO CDC)",
         table_properties={"delta.enableChangeDataFeed": "true"},
     )
     scd_type = int(spec.get("scd_type", 1))
     if scd_type == 2:
-        dlt.apply_changes(
+        dp.create_auto_cdc_flow(
             target=target_name,
             source=prep_name,
             keys=list(spec["keys"]),
             sequence_by="_ingested_at",
-            ignore_null_keys=True,
-            track_by=list(spec["track_by"]),
+            track_history_column_list=list(spec["track_by"]),
             stored_as_scd_type=2,
         )
     else:
-        dlt.apply_changes(
+        dp.create_auto_cdc_flow(
             target=target_name,
             source=prep_name,
             keys=list(spec["keys"]),
             sequence_by="_ingested_at",
-            ignore_null_keys=True,
-            stored_as_scd_type=1,
+            stored_as_scd_type="1",
         )
