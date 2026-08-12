@@ -23,7 +23,7 @@ gantt
     section Phase 3: Pipelines
     Bronze Ingestion Framework      :done, p3_1, 2026-08-15, 2026-08-22
     Silver Conformed Transformations :done, p3_2, 2026-08-20, 2026-08-28
-    Gold Star Schema & DLT          :done, p3_3, 2026-08-25, 2026-09-02
+    Gold Star Schema & Lakeflow     :done, p3_3, 2026-08-25, 2026-09-02
     Demo Runbook & Evidence         :done, p3_4, 2026-09-02, 2026-09-04
     section Phase 4: Observability
     Gold Reporting Dashboards        :done, p4_0, 2026-09-01, 2026-09-10
@@ -50,19 +50,19 @@ gantt
 - [x] Unity Catalog metastore, Access Connector (Managed Identity), storage credentials, external locations, catalogs, and medallion schemas.
 - [x] AzureRM provider upgraded to `~> 5.0` with regenerated lock files.
 
-### Phase 3: Medallion Data Pipelines & Delta Live Tables (Implemented)
-- [x] PySpark & Delta Live Tables (DLT) framework for Bronze Auto Loader ingestion. Declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`). Reference sources are the synthetic generator's landing files; Oracle/SFTP/REST wiring is out of scope for this reference platform.
-- [x] Silver layer conformed transformations, SCD Type 1 **and** SCD Type 2, and schema validation. Declarative Silver manifest (`pipelines/energy/silver_manifest.json`), conforming helpers (`notebooks/shared/silver.py`), and a data-driven DLT notebook (`notebooks/silver/transform_energy.py`). Tables default to SCD Type 1 upserts; `customers` and `assets` opt into SCD Type 2 (``track_by`` + ``stored_as_scd_type=2``) to preserve historical versions of lifecycle attributes. The SCD2 semantics contract is pinned in pure Python by `notebooks/shared/scd2.py` + `tests/test_scd2.py`, so CI verifies the behavior DLT must produce (initial version, close/open on tracked change, one current version, no history on repeats).
-- [x] Gold layer star schema modeling. Declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with 9 Kimball dimensions, a generated date dimension, and 4 facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); a data-driven DLT notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations.
+### Phase 3: Medallion Data Pipelines & Lakeflow Declarative Pipelines (Implemented)
+- [x] PySpark & Lakeflow Declarative Pipelines framework for Bronze Auto Loader ingestion. Declarative Bronze manifest (`pipelines/energy/bronze_manifest.json`), shared Auto Loader helpers (`notebooks/shared/`), and a data-driven Lakeflow notebook (`notebooks/bronze/ingest_energy.py`). Reference sources are the synthetic generator's landing files; Oracle/SFTP/REST wiring is out of scope for this reference platform.
+- [x] Silver layer conformed transformations, SCD Type 1 **and** SCD Type 2, and schema validation. Declarative Silver manifest (`pipelines/energy/silver_manifest.json`), conforming helpers (`notebooks/shared/silver.py`), and a data-driven Lakeflow notebook (`notebooks/silver/transform_energy.py`). Tables default to SCD Type 1 upserts; `customers` and `assets` opt into SCD Type 2 (`track_by` — manifest key `track_history_column_list` — + `stored_as_scd_type=2`) to preserve historical versions of lifecycle attributes. The SCD2 semantics contract is pinned in pure Python by `notebooks/shared/scd2.py` + `tests/test_scd2.py`, so CI verifies the behavior the Lakeflow engine must produce (initial version, close/open on tracked change, one current version, no history on repeats).
+- [x] Gold layer star schema modeling. Declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with 9 Kimball dimensions, a generated date dimension, and 4 facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); a data-driven Lakeflow notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations.
 - [x] Gold reporting dashboards (Databricks AI/BI / Lakeview) deployed from the Databricks Asset Bundle (`bundle/resources/energy_operations.dashboard.yml` + `bundle/src/energy_operations.lvdash.json`) on top of the Gold star schema. **NorthGrid Energy Operations** is deployed and live in dev.
 
 ### Phase 4: Monitoring, Observability & Data Quality (Not Started)
 - [ ] Databricks System Tables queries for billing, cluster performance, and audit tracking.
 - [ ] Integration with Azure Log Analytics workspace and Databricks SQL dashboards.
-- [ ] DLT event log parsing and Slack / Microsoft Teams incident alerting.
+- [ ] Pipeline event log parsing and Slack / Microsoft Teams incident alerting.
 
 ### Phase 5: End-to-End Release & Production Readiness (In Progress)
-- [x] Databricks Asset Bundle packaging for the DLT pipelines and dashboard (`bundle/databricks.yml`, targets `dev`/`qa`/`prod`) with a branch-driven `Databricks Bundle CI/CD` workflow and offline structural validation (`scripts/validate_bundle.py`); live workspace validate/deploy steps are gated on credentials and become active with OIDC below.
+- [x] Databricks Asset Bundle packaging for the Lakeflow pipelines and dashboard (`bundle/databricks.yml`, targets `dev`/`qa`/`prod`) with a branch-driven `Databricks Bundle CI/CD` workflow and offline structural validation (`scripts/validate_bundle.py`); live workspace validate/deploy steps are gated on credentials and become active with OIDC below.
 - [x] Workspace deployment through Databricks Asset Bundles: the `energy_lakehouse` pipeline executes successfully against a live workspace and the AI/BI dashboard is deployed on the resulting data.
 - [ ] GitHub Actions OIDC automated Terraform deployment pipelines (`plan` on PR, `apply` on merge).
 - [ ] Automated notebook integration test execution against Databricks staging workspace.

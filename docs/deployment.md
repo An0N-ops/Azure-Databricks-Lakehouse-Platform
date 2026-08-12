@@ -125,9 +125,9 @@ databricks metastores list
 
 ---
 
-## Step 5: Deploy the DLT Pipelines with Databricks Asset Bundles
+## Step 5: Deploy the Lakeflow Pipelines with Databricks Asset Bundles
 
-The Bronze/Silver/Gold Delta Live Tables pipelines are packaged as a Databricks
+The Bronze/Silver/Gold Lakeflow pipelines are packaged as a Databricks
 Asset Bundle in `bundle/databricks.yml` and released by the
 `Databricks Bundle CI/CD` GitHub Actions workflow. The bundle declares the three
 pipelines and three targets; catalog and landing-path values are bundle

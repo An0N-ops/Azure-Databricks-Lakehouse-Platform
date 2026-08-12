@@ -2,14 +2,14 @@
 
 Every feature in this platform is documented as a consulting brief — the
 business problem it solves, the solution, the expected outcome, and how it is
-implemented. This is the **deployment brief**: how the Bronze/Silver/Gold DLT
+implemented. This is the **deployment brief**: how the Bronze/Silver/Gold Lakeflow
 pipelines are packaged, validated, and released to dev, qa, and prod.
 
 ## Business Problem
 
-The medallion DLT pipelines are code, but today they have no release pipeline.
+The medallion Lakeflow pipelines are code, but today they have no release pipeline.
 Notebooks and manifests are reviewed as source, yet nobody has answered *how the
-pipelines actually get to a workspace*. Deploying a Delta Live Tables pipeline by
+pipelines actually get to a workspace*. Deploying a Lakeflow pipeline by
 hand means:
 
 - **Manual, error-prone releases** — clicking through the Databricks UI to
@@ -25,19 +25,19 @@ hand means:
 ## Solution
 
 **Databricks Asset Bundles (DABs)** — the platform's native IaC for Databricks
-resources — package all three DLT pipelines and their environments in a single
+resources — package all three Lakeflow pipelines and their environments in a single
 declarative definition, `bundle/databricks.yml`, plus a GitHub Actions workflow
 (`.github/workflows/dab-ci-cd.yml`) that validates every change and deploys by
 branch.
 
 - **One bundle, three environments**: the three pipelines
-  (`energy_bronze`, `energy_silver`, `energy_gold`) reference the existing DLT
-  notebooks and declare their Unity Catalog schema, cluster, and DLT cluster
+  (`energy_bronze`, `energy_silver`, `energy_gold`) reference the existing Lakeflow
+  notebooks and declare their Unity Catalog schema, cluster, and pipeline cluster
   environment variables. Catalog and landing path come from bundle variables, so
   the same definition promotes across `dev`, `qa`, and `prod` unchanged — the
   exact `{placeholder}` strategy the manifests already use.
 - **Manifest placeholders flow through**: `DATABRICKS_CATALOG` and
-  `DATABRICKS_LANDING_PATH` are set as `spark_env_vars` on each DLT cluster from
+  `DATABRICKS_LANDING_PATH` are set as `spark_env_vars` on each pipeline cluster from
   the bundle variables, so the notebooks resolve `{catalog}` and `{landing}`
   exactly as they do in a local Databricks Connect run.
 - **Validation without a workspace**: `databricks bundle validate` needs live
@@ -68,7 +68,7 @@ branch.
 
 - Databricks CLI `>= 0.231.0` (schema verified against `v1.10.0`); GitHub Action
   `databricks/setup-cli` provisions it in CI.
-- The DLT notebooks and manifests from Phase 3 (`notebooks/`, `pipelines/`).
+- The Lakeflow notebooks and manifests from Phase 3 (`notebooks/`, `pipelines/`).
 - Unity Catalog schemas per environment (provisioned in Phase 2 by Terraform).
 - Workspace credentials (`DATABRICKS_HOST` + `DATABRICKS_TOKEN`, or OIDC in
   Phase 5) before any real deployment runs.
@@ -86,10 +86,10 @@ branch.
   (skipped until credentials are configured).
 - `scripts/validate_bundle.py` — pure-Python (PyYAML) structural validator run
   in CI without Databricks credentials.
-- The DLT notebooks and manifests under `notebooks/` and `pipelines/` are the
+- The Lakeflow notebooks and manifests under `notebooks/` and `pipelines/` are the
   deployed artifacts the bundle references.
 
-**Known consideration**: the DLT notebooks import shared helpers from
+**Known consideration**: the Lakeflow notebooks import shared helpers from
 `notebooks.shared` by climbing to the repository root. Once Phase 5 validates
 the bundle against a real workspace, the pipeline `root_path` (or bundle layout)
 may need adjustment so those imports resolve inside the deployed workspace.

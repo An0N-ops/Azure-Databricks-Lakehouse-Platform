@@ -20,8 +20,8 @@ transformation silently published.
 A **declarative Kimball star schema**: `pipelines/energy/gold_manifest.json`
 (ADR-004) declares one spec per model — its Silver source, kind (dimension,
 date dimension, or fact), primary key, foreign-key references, and for facts a
-derived date key plus optional aggregations. A data-driven DLT notebook
-(`notebooks/gold/transform_energy.py`) renders one DLT table per model:
+derived date key plus optional aggregations. A data-driven Lakeflow notebook
+(`notebooks/gold/transform_energy.py`) renders one declarative table per model:
 
 - **Dimensions** conform Silver entities as `dim_*` tables; the manifest's
   foreign-key declarations make the star schema reviewable as data. `dim_date`
@@ -51,7 +51,7 @@ derived date key plus optional aggregations. A data-driven DLT notebook
 ## Dependencies
 
 - Silver tables produced by the conforming framework (PR 3).
-- Delta Live Tables on Databricks Runtime 14.3 LTS+ (ADR-005).
+- Lakeflow Declarative Pipelines on Databricks Runtime 14.3 LTS+ (ADR-005).
 - Unity Catalog `silver` and `gold` schemas; `DATABRICKS_CATALOG` variable.
 
 ## Implementation
@@ -66,7 +66,7 @@ derived date key plus optional aggregations. A data-driven DLT notebook
   `_aggregation_expr`, `register_gold`.
 - `notebooks/shared/ingest.py` — `apply_expectations` now supports the `fail`
   policy for the Silver-to-Gold boundary.
-- `notebooks/gold/transform_energy.py` — the data-driven DLT pipeline notebook.
+- `notebooks/gold/transform_energy.py` — the data-driven Lakeflow pipeline notebook.
 - `tests/test_gold_manifest.py` — pins the manifest to the Silver manifest and
   generator pack, and unit-tests the date dimension.
 
