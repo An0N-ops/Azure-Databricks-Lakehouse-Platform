@@ -56,10 +56,12 @@ gantt
 - [x] Gold layer star schema modeling. Declarative Gold manifest (`pipelines/energy/gold_manifest.json`) with 9 Kimball dimensions, a generated date dimension, and 4 facts with derived date keys and aggregations; helpers (`notebooks/shared/gold.py`, `notebooks/shared/gold_manifest.py`); a data-driven Lakeflow notebook (`notebooks/gold/transform_energy.py`) using fail-on-violation quality expectations.
 - [x] Gold reporting dashboards (Databricks AI/BI / Lakeview) deployed from the Databricks Asset Bundle (`bundle/resources/energy_operations.dashboard.yml` + `bundle/src/energy_operations.lvdash.json`) on top of the Gold star schema. **NorthGrid Energy Operations** is deployed and live in dev.
 
-### Phase 4: Monitoring, Observability & Data Quality (Not Started)
-- [ ] Databricks System Tables queries for billing, cluster performance, and audit tracking.
+### Phase 4: Monitoring, Observability & Data Quality (In Progress — Milestone A)
+- [x] Databricks System Tables queries for billing, cost, warehouse performance, and audit tracking — **validated against the live dev workspace** (Milestone A first slice): `scripts/observability_report.py` + `docs/monitoring.md` (job runs via `system.lakeflow.*`, table freshness via UC `information_schema`, row volumes, `system.query.history` health, `system.billing.usage` cost, `system.access.audit`).
+- [ ] Scheduled snapshot of the observability report (bundle job writing a `metrics` schema table).
+- [ ] Databricks-native alerts: freshess SQL alert, job success/failure webhooks, `system.alert` warehouse health anomalies.
 - [ ] Integration with Azure Log Analytics workspace and Databricks SQL dashboards.
-- [ ] Pipeline event log parsing and Slack / Microsoft Teams incident alerting.
+- [ ] Pipeline event log alerting (Slack / Microsoft Teams) — daily digest of quality events per update.
 
 ### Phase 5: End-to-End Release & Production Readiness (In Progress)
 - [x] Databricks Asset Bundle packaging for the Lakeflow pipelines and dashboard (`bundle/databricks.yml`, targets `dev`/`qa`/`prod`) with a branch-driven `Databricks Bundle CI/CD` workflow and offline structural validation (`scripts/validate_bundle.py`); live workspace validate/deploy steps are gated on credentials and become active with OIDC below.
