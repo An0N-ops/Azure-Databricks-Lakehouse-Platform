@@ -2,7 +2,7 @@
 
 ## Overview
 
-Observability combines Databricks System Tables, Delta Live Tables (DLT) event logs, and Azure Log Analytics for operational visibility, cost control, and data reliability. Queries below assume system tables are enabled in the workspace.
+Observability combines Databricks System Tables, Lakeflow declarative pipeline event logs, and Azure Log Analytics for operational visibility, cost control, and data reliability. Queries below assume system tables are enabled in the workspace.
 
 ---
 
@@ -13,7 +13,7 @@ Observability combines Databricks System Tables, Delta Live Tables (DLT) event l
 │               Azure Databricks Workspace               │
 │                                                        │
 │  ┌──────────────────┐  ┌────────────────────────────┐  │
-│  │ DLT Event Logs   │  │ Databricks System Tables   │  │
+│  │Lakeflow Event Log│  │ Databricks System Tables   │  │
 │  │ (Data Quality)   │  │ (Audit, Billing, Compute)  │  │
 │  └────────┬─────────┘  └─────────────┬──────────────┘  │
 └───────────┼──────────────────────────┼─────────────────┘
@@ -71,9 +71,9 @@ ORDER BY event_time DESC;
 
 ---
 
-## 3. Delta Live Tables (DLT) Event Log Analysis
+## 3. Lakeflow Pipeline Event Log Analysis
 
-DLT writes detailed metrics (records ingested, expectations met/failed, execution duration) directly to an event log table:
+Lakeflow writes detailed metrics (records ingested, expectations met/failed, execution duration) directly to an event log table:
 
 ```sql
 SELECT

@@ -138,14 +138,14 @@ every decision in a manifest and its validator, which are pure Python:
   aggregated measures are generated), and unit-tests the generated date
   dimension. Same pure-Python constraint.
 - `notebooks/shared/scd2.py` + `tests/test_scd2.py` pin the SCD Type 2
-  semantics DLT must produce for `track_by` + `stored_as_scd_type=2` silver
+  semantics the Lakeflow engine must produce for `track_by` + `stored_as_scd_type=2` silver
   tables: initial version, close/open on tracked attribute changes, exactly
   one current version per key, no history growth for repeated identical
-  records, and in-place absorption of untracked changes. The DLT engine is
+  records, and in-place absorption of untracked changes. The Lakeflow engine is
   the runtime implementation; the module is the reviewable oracle.
 
 Spark-only helpers (`notebooks/shared/ingest.py`, `notebooks/shared/silver.py`,
-`notebooks/shared/gold.py`) keep PySpark/DLT imports inside functions so they
+`notebooks/shared/gold.py`) keep PySpark/Lakeflow imports inside functions so they
 can be imported and linted without a runtime; they are reviewed statically and
 validated against Databricks in Phase 5. Add a chispa job to CI when Spark
 compute is available in the pipeline.

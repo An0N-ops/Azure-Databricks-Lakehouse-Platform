@@ -63,7 +63,7 @@ cd bundle
 databricks bundle deploy --target dev --auto-approve -p <profile>
 ```
 
-Deploys the `energy_lakehouse` DLT pipeline, the `generate_energy_data` job,
+Deploys the `energy_lakehouse` Lakeflow pipeline, the `generate_energy_data` job,
 and the `energy_operations` AI/BI dashboard (all declared in
 `bundle/databricks.yml` and `bundle/resources/*.yml`).
 
@@ -76,7 +76,7 @@ databricks pipelines get-update <PIPELINE_ID> <UPDATE_ID> -p <profile>
 ```
 
 Repeat `get-update` until the state is `COMPLETED`. On the first run after an
-SCD2 change, DLT recreates the `silver.customers` and `silver.assets`
+SCD2 change, the pipeline recreates the `silver.customers` and `silver.assets`
 streaming tables — a "recreated" event is expected, not a failure.
 
 ## 6. Verify Bronze, Silver, and Gold

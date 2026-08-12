@@ -27,8 +27,8 @@ still be inspectable.
 
 A **declarative ingestion framework**: the source contract lives in
 `pipelines/energy/bronze_manifest.json` (ADR-004) — one table spec per entity
-declaring its landing source, format/options, and DLT quality expectations.
-A data-driven DLT notebook (`notebooks/bronze/ingest_energy.py`) renders one
+declaring its landing source, format/options, and Lakeflow quality expectations.
+A data-driven Lakeflow notebook (`notebooks/bronze/ingest_energy.py`) renders one
 Auto Loader streaming table per spec.
 
 - **Auto Loader (`cloudFiles`)**: incrementally discovers new files in
@@ -41,7 +41,7 @@ Auto Loader streaming table per spec.
   `{schema}`, `{table}` tokens resolved from environment variables, so one
   manifest promotes unchanged across dev/qa/prod.
 - **Quality policy**: expectations use the ADR-005 **retain** policy — raw rows
-  that violate expectations are kept and flagged in the DLT event log, never
+  that violate expectations are kept and flagged in the Lakeflow event log, never
   silently dropped.
 
 ## Expected Outcome
@@ -55,7 +55,7 @@ Auto Loader streaming table per spec.
 
 ## Dependencies
 
-- Delta Live Tables on Databricks Runtime 14.3 LTS+ (ADR-005).
+- Lakeflow Declarative Pipelines on Databricks Runtime 14.3 LTS+ (ADR-005).
 - A Unity Catalog target schema (provisioned in Phase 2).
 - Environment variables: `DATABRICKS_LANDING_PATH`, `DATABRICKS_CATALOG`.
 - Synthetic landing files produced by the data generator (PR 1).
@@ -70,7 +70,7 @@ Auto Loader streaming table per spec.
 - `notebooks/shared/ingest.py` — PySpark helpers: `with_audit_columns`,
   `autoloader_reader`, `bronze_stream`, `dlt_bronze_table`,
   `apply_expectations` (retain policy).
-- `notebooks/bronze/ingest_energy.py` — the data-driven DLT pipeline notebook.
+- `notebooks/bronze/ingest_energy.py` — the data-driven Lakeflow pipeline notebook.
 - `tests/test_bronze_manifest.py` — pins the manifest to the generator pack
   (entity coverage, primary keys) and exercises placeholder resolution.
 
