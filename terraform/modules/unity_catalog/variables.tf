@@ -44,6 +44,24 @@ variable "default_catalog_name" {
   description = "Name of the primary catalog created in the workspace (e.g., dev_lakehouse)."
 }
 
+variable "key_vault_id" {
+  type        = string
+  description = "Azure Resource ID of the Key Vault backing the Databricks secret scope."
+  default     = ""
+}
+
+variable "key_vault_uri" {
+  type        = string
+  description = "Vault URI of the Key Vault backing the Databricks secret scope."
+  default     = ""
+}
+
+variable "data_owner_group" {
+  type        = string
+  description = "Entra group granted USE/CREATE on the catalog and USE on medallion schemas. Empty disables grants."
+  default     = ""
+}
+
 variable "force_destroy" {
   type        = bool
   description = "Allow deletion of the metastore and its managed tables. Set to true only for non-production teardown."

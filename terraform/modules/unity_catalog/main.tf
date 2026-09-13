@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -7,7 +7,7 @@ terraform {
     }
     databricks = {
       source                = "databricks/databricks"
-      version               = "~> 1.43"
+      version               = "~> 1.129"
       configuration_aliases = [databricks.account, databricks.workspace]
     }
   }
@@ -59,6 +59,9 @@ resource "azurerm_role_assignment" "storage_blob_data_contributor" {
   scope                = each.value
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.this.principal_id
+  # UAMI presents as a service principal; setting the type lets the provider
+  # wait for AAD replication instead of failing with PrincipalNotFound.
+  principal_type = "ServicePrincipal"
 }
 
 resource "databricks_metastore" "this" {
@@ -76,6 +79,9 @@ resource "databricks_storage_credential" "this" {
   azure_managed_identity {
     access_connector_id = azurerm_databricks_access_connector.this.id
   }
+
+  # RBAC must propagate before Databricks validates the connector.
+  depends_on = [azurerm_role_assignment.storage_blob_data_contributor]
 }
 
 resource "databricks_metastore_data_access" "this" {
@@ -87,6 +93,8 @@ resource "databricks_metastore_data_access" "this" {
   azure_managed_identity {
     access_connector_id = azurerm_databricks_access_connector.this.id
   }
+
+  depends_on = [azurerm_role_assignment.storage_blob_data_contributor]
 }
 
 resource "databricks_metastore_assignment" "this" {
@@ -148,4 +156,52 @@ resource "databricks_schema" "gold" {
   comment      = "Analytics-ready Kimball star-schema models optimized for Databricks SQL and Power BI."
 
   depends_on = [databricks_metastore_assignment.this]
+}
+
+# Links the environment Key Vault to the workspace so notebooks/jobs can
+# reference secrets via {{secrets/<scope>/<key>}} without storing them in code.
+# Created only when the caller passes key_vault_id/uri (environment wrapper does).
+resource "databricks_secret_scope" "key_vault" {
+  count    = var.key_vault_id != "" && var.key_vault_uri != "" ? 1 : 0
+  provider = databricks.workspace
+  name     = "${var.environment}-keyvault"
+
+  keyvault_metadata {
+    resource_id = var.key_vault_id
+    dns_name    = var.key_vault_uri
+  }
+
+  depends_on = [databricks_metastore_assignment.this]
+}
+
+# Least-privilege grants skeleton. Set data_owner_group (e.g., "data-engineers")
+# to grant catalog/schema usage; empty (default) creates no grants so `validate`
+# and fresh workspaces without groups still succeed.
+resource "databricks_grants" "catalog" {
+  count    = var.data_owner_group != "" ? 1 : 0
+  provider = databricks.workspace
+  catalog  = databricks_catalog.this.name
+
+  grant {
+    principal  = var.data_owner_group
+    privileges = ["USE CATALOG", "USE SCHEMA", "CREATE SCHEMA", "CREATE TABLE", "CREATE VOLUME"]
+  }
+
+  depends_on = [databricks_metastore_assignment.this]
+}
+
+resource "databricks_grants" "schemas" {
+  for_each = var.data_owner_group != "" ? {
+    bronze = databricks_schema.bronze.name
+    silver = databricks_schema.silver.name
+    gold   = databricks_schema.gold.name
+  } : {}
+
+  provider = databricks.workspace
+  schema   = "${databricks_catalog.this.name}.${each.value}"
+
+  grant {
+    principal  = var.data_owner_group
+    privileges = ["USE SCHEMA", "CREATE TABLE", "CREATE VOLUME", "READ VOLUME"]
+  }
 }

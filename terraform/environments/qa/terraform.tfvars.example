@@ -7,12 +7,18 @@ project_name                     = "lakehouse"
 environment                      = "qa"
 location                         = "eastus2"
 
-vnet_cidr                        = "10.100.0.0/16"
-public_subnet_cidr               = "10.100.1.0/24"
-private_subnet_cidr              = "10.100.2.0/24"
+vnet_cidr                        = "10.101.0.0/16"
+public_subnet_cidr               = "10.101.1.0/24"
+private_subnet_cidr              = "10.101.2.0/24"
+enable_nat_gateway               = true
 
 storage_containers               = ["bronze", "silver", "gold", "unity-catalog"]
 storage_account_replication_type = "ZRS"
+storage_network_default_action   = "Allow"
+
+key_vault_network_default_action   = "Allow"
+key_vault_purge_protection_enabled = true
 
 unity_catalog_force_destroy      = false
 unity_catalog_skip_validation    = true
+unity_catalog_data_owner_group   = ""

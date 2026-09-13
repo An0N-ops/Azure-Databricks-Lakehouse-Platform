@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -23,14 +23,22 @@ resource "random_string" "suffix" {
 }
 
 resource "azurerm_key_vault" "this" {
-  name                       = "kv-${local.project_prefix}-${var.environment}-${random_string.suffix.result}"
-  location                   = var.location
-  resource_group_name        = var.resource_group_name
-  tenant_id                  = var.tenant_id
-  sku_name                   = var.sku_name
-  soft_delete_retention_days = var.soft_delete_retention_days
-  purge_protection_enabled   = var.purge_protection_enabled
-  rbac_authorization_enabled = var.rbac_authorization_enabled
+  name                          = "kv-${local.project_prefix}-${var.environment}-${random_string.suffix.result}"
+  location                      = var.location
+  resource_group_name           = var.resource_group_name
+  tenant_id                     = var.tenant_id
+  sku_name                      = var.sku_name
+  soft_delete_retention_days    = var.soft_delete_retention_days
+  purge_protection_enabled      = var.purge_protection_enabled
+  rbac_authorization_enabled    = var.rbac_authorization_enabled
+  public_network_access_enabled = var.public_network_access_enabled
+
+  network_acls {
+    bypass                     = "AzureServices"
+    default_action             = var.network_default_action
+    virtual_network_subnet_ids = var.allowed_subnet_ids
+    ip_rules                   = var.allowed_ip_rules
+  }
 
   tags = merge(
     {
