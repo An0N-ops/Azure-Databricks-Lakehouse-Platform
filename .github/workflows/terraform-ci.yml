@@ -29,7 +29,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: 1.7.5
+          terraform_version: 1.16.1
 
       - name: Check Formatting
         run: terraform fmt -check -recursive terraform/
@@ -44,7 +44,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: 1.7.5
+          terraform_version: 1.16.1
 
       - name: Init and Validate Bootstrap
         run: |
@@ -65,7 +65,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: 1.7.5
+          terraform_version: 1.16.1
 
       - name: Init and Validate ${{ matrix.environment }} Environment
         working-directory: terraform/environments/${{ matrix.environment }}

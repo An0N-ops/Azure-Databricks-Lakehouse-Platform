@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -15,6 +15,11 @@ terraform {
 provider "azurerm" {
   features {}
   subscription_id = var.subscription_id
+  # azurerm v5 defaults to no RP auto-registration; register only what bootstrap needs.
+  resource_providers_to_register = [
+    "Microsoft.Resources",
+    "Microsoft.Storage",
+  ]
 }
 
 resource "random_string" "suffix" {

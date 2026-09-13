@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -7,7 +7,7 @@ terraform {
     }
     databricks = {
       source  = "databricks/databricks"
-      version = "~> 1.43"
+      version = "~> 1.129"
     }
   }
 }
@@ -31,13 +31,19 @@ module "environment" {
   vnet_cidr           = var.vnet_cidr
   public_subnet_cidr  = var.public_subnet_cidr
   private_subnet_cidr = var.private_subnet_cidr
+  enable_nat_gateway  = var.enable_nat_gateway
 
   storage_containers               = var.storage_containers
   storage_account_replication_type = var.storage_account_replication_type
+  storage_network_default_action   = var.storage_network_default_action
 
-  metastore_container_name      = var.metastore_container_name
-  unity_catalog_force_destroy   = var.unity_catalog_force_destroy
-  unity_catalog_skip_validation = var.unity_catalog_skip_validation
+  key_vault_network_default_action   = var.key_vault_network_default_action
+  key_vault_purge_protection_enabled = var.key_vault_purge_protection_enabled
+
+  metastore_container_name       = var.metastore_container_name
+  unity_catalog_force_destroy    = var.unity_catalog_force_destroy
+  unity_catalog_skip_validation  = var.unity_catalog_skip_validation
+  unity_catalog_data_owner_group = var.unity_catalog_data_owner_group
 
   additional_tags = var.additional_tags
 }

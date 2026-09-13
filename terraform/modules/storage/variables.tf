@@ -48,6 +48,41 @@ variable "soft_delete_retention_days" {
   default     = 30
 }
 
+variable "shared_access_key_enabled" {
+  type        = bool
+  description = "Allow storage account key access. Disable to enforce Entra ID only (Unity Catalog uses managed identity)."
+  default     = false
+}
+
+variable "public_network_access_enabled" {
+  type        = bool
+  description = "Allow public network access. Set false only after private endpoints are configured."
+  default     = true
+}
+
+variable "network_default_action" {
+  type        = string
+  description = "Storage firewall default action. Use Deny with allowed_subnet_ids for prod lockdown."
+  default     = "Allow"
+
+  validation {
+    condition     = contains(["Allow", "Deny"], var.network_default_action)
+    error_message = "network_default_action must be Allow or Deny."
+  }
+}
+
+variable "allowed_subnet_ids" {
+  type        = list(string)
+  description = "Subnet resource IDs allowed through the storage firewall when network_default_action=Deny."
+  default     = []
+}
+
+variable "cross_tenant_replication_enabled" {
+  type        = bool
+  description = "Allow cross-tenant replication. Disable for data exfiltration guardrail."
+  default     = false
+}
+
 variable "additional_tags" {
   type        = map(string)
   description = "Additional tags to append to the storage account."

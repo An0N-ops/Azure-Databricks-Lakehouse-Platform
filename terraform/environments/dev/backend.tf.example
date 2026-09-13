@@ -1,7 +1,11 @@
+# Copy to backend.tf and fill values from `terraform/bootstrap` outputs:
+#   terraform -chdir=../../bootstrap output -raw resource_group_name
+#   terraform -chdir=../../bootstrap output -raw storage_account_name
+# Or use the `backend_config_template` output verbatim.
 terraform {
   backend "azurerm" {
-    resource_group_name  = "rg-lakehouse-tfstate-shared-eastus2"
-    storage_account_name = "stlakehousetfstateshared"
+    resource_group_name  = "rg-lakehouse-tfstate-shared-eastus2" # bootstrap: resource_group_name
+    storage_account_name = "st<bootstrap-suffix>"                # bootstrap: storage_account_name (random suffix, see output)
     container_name       = "tfstate"
     key                  = "dev.terraform.tfstate"
   }

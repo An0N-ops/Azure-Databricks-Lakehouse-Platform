@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.7.0"
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -23,16 +23,25 @@ resource "random_string" "suffix" {
 }
 
 resource "azurerm_storage_account" "this" {
-  name                            = "st${local.project_prefix}${var.environment}${random_string.suffix.result}"
-  resource_group_name             = var.resource_group_name
-  location                        = var.location
-  account_tier                    = var.account_tier
-  account_replication_type        = var.account_replication_type
-  account_kind                    = "StorageV2"
-  is_hns_enabled                  = true
-  min_tls_version                 = var.min_tls_version
-  https_traffic_only_enabled      = true
-  allow_nested_items_to_be_public = false
+  name                             = "st${local.project_prefix}${var.environment}${random_string.suffix.result}"
+  resource_group_name              = var.resource_group_name
+  location                         = var.location
+  account_tier                     = var.account_tier
+  account_replication_type         = var.account_replication_type
+  account_kind                     = "StorageV2"
+  is_hns_enabled                   = true
+  min_tls_version                  = var.min_tls_version
+  https_traffic_only_enabled       = true
+  allow_nested_items_to_be_public  = false
+  shared_access_key_enabled        = var.shared_access_key_enabled
+  public_network_access_enabled    = var.public_network_access_enabled
+  cross_tenant_replication_enabled = var.cross_tenant_replication_enabled
+
+  network_rules {
+    default_action             = var.network_default_action
+    bypass                     = ["AzureServices"]
+    virtual_network_subnet_ids = var.allowed_subnet_ids
+  }
 
   blob_properties {
     versioning_enabled = true
