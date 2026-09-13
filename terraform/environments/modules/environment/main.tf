@@ -121,21 +121,24 @@ module "unity_catalog" {
     databricks.workspace = databricks.workspace
   }
 
-  project_name             = var.project_name
-  environment              = var.environment
-  location                 = var.location
-  resource_group_name      = module.resource_group.name
-  databricks_workspace_id  = module.databricks_workspace.workspace_id
-  storage_account_name     = module.storage.name
-  medallion_containers     = module.storage.containers
-  metastore_container_name = var.metastore_container_name
-  default_catalog_name     = "${var.environment}_lakehouse"
-  force_destroy            = var.unity_catalog_force_destroy
-  skip_validation          = var.unity_catalog_skip_validation
-  key_vault_id             = module.key_vault.id
-  key_vault_uri            = module.key_vault.uri
-  data_owner_group         = var.unity_catalog_data_owner_group
-  additional_tags          = var.additional_tags
+  project_name                     = var.project_name
+  environment                      = var.environment
+  location                         = var.location
+  resource_group_name              = module.resource_group.name
+  databricks_workspace_id          = module.databricks_workspace.workspace_id
+  storage_account_name             = module.storage.name
+  medallion_containers             = module.storage.containers
+  metastore_container_name         = var.metastore_container_name
+  default_catalog_name             = "${var.environment}_lakehouse"
+  force_destroy                    = var.unity_catalog_force_destroy
+  skip_validation                  = var.unity_catalog_skip_validation
+  create_metastore                 = var.unity_catalog_create_metastore
+  metastore_id                     = var.unity_catalog_metastore_id
+  metastore_data_access_is_default = var.unity_catalog_data_access_is_default
+  key_vault_id                     = module.key_vault.id
+  key_vault_uri                    = module.key_vault.uri
+  data_owner_group                 = var.unity_catalog_data_owner_group
+  additional_tags                  = var.additional_tags
 
   depends_on = [module.databricks_workspace]
 }

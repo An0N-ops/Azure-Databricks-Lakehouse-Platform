@@ -15,6 +15,10 @@ terraform {
 
 locals {
   credential_name = "${var.project_name}-${var.environment}-managed-identity"
+  # Shared-metastore topology: one regional metastore (shared stack) serves all
+  # environments; each environment keeps its own credential, external locations,
+  # catalog and schemas. When create_metastore=false, metastore_id must be set.
+  metastore_id = var.create_metastore ? databricks_metastore.this[0].id : var.metastore_id
 }
 
 resource "azurerm_user_assigned_identity" "this" {
@@ -65,6 +69,7 @@ resource "azurerm_role_assignment" "storage_blob_data_contributor" {
 }
 
 resource "databricks_metastore" "this" {
+  count         = var.create_metastore ? 1 : 0
   provider      = databricks.account
   name          = "${var.project_name}-${var.environment}-metastore"
   region        = var.location
@@ -86,9 +91,12 @@ resource "databricks_storage_credential" "this" {
 
 resource "databricks_metastore_data_access" "this" {
   provider     = databricks.account
-  metastore_id = databricks_metastore.this.id
+  metastore_id = local.metastore_id
   name         = "default"
-  is_default   = true
+  # Only one default data access may exist per metastore. Keep true for the
+  # legacy per-env topology; set false in every env once shared-metastore
+  # mode is adopted (the shared stack owns the default).
+  is_default = var.metastore_data_access_is_default
 
   azure_managed_identity {
     access_connector_id = azurerm_databricks_access_connector.this.id
@@ -100,7 +108,7 @@ resource "databricks_metastore_data_access" "this" {
 resource "databricks_metastore_assignment" "this" {
   provider             = databricks.workspace
   workspace_id         = var.databricks_workspace_id
-  metastore_id         = databricks_metastore.this.id
+  metastore_id         = local.metastore_id
   default_catalog_name = var.default_catalog_name
 }
 
