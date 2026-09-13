@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [dev, qa, prod]
+        environment: [dev, qa, prod, shared]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7

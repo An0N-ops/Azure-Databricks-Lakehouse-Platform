@@ -164,6 +164,24 @@ variable "unity_catalog_skip_validation" {
   default     = false
 }
 
+variable "unity_catalog_create_metastore" {
+  type        = bool
+  description = "Create a dedicated metastore in this environment. Set false to attach to the shared metastore."
+  default     = true
+}
+
+variable "unity_catalog_metastore_id" {
+  type        = string
+  description = "Shared metastore ID. Required when unity_catalog_create_metastore=false."
+  default     = ""
+}
+
+variable "unity_catalog_data_access_is_default" {
+  type        = bool
+  description = "Mark this environment's data access as the metastore default. Set false in envs when using the shared metastore."
+  default     = true
+}
+
 variable "additional_tags" {
   type        = map(string)
   description = "Additional tags appended to all environment resources."

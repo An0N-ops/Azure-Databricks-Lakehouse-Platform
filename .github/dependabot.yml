@@ -39,3 +39,11 @@ updates:
     labels:
       - "dependencies"
       - "terraform"
+
+  - package-ecosystem: "terraform"
+    directory: "/terraform/environments/shared"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "terraform"
