@@ -1,11 +1,11 @@
 output "metastore_id" {
-  value       = databricks_metastore.this.id
-  description = "Azure Databricks Unity Catalog metastore ID."
+  value       = local.metastore_id
+  description = "Unity Catalog metastore ID in use (created locally or shared via metastore_id)."
 }
 
 output "metastore_name" {
-  value       = databricks_metastore.this.name
-  description = "Name of the provisioned Unity Catalog metastore."
+  value       = var.create_metastore ? databricks_metastore.this[0].name : null
+  description = "Name of the locally provisioned metastore (null in shared-metastore mode)."
 }
 
 output "catalog_name" {

@@ -40,10 +40,13 @@ module "environment" {
   key_vault_network_default_action   = var.key_vault_network_default_action
   key_vault_purge_protection_enabled = var.key_vault_purge_protection_enabled
 
-  metastore_container_name       = var.metastore_container_name
-  unity_catalog_force_destroy    = var.unity_catalog_force_destroy
-  unity_catalog_skip_validation  = var.unity_catalog_skip_validation
-  unity_catalog_data_owner_group = var.unity_catalog_data_owner_group
+  metastore_container_name             = var.metastore_container_name
+  unity_catalog_force_destroy          = var.unity_catalog_force_destroy
+  unity_catalog_skip_validation        = var.unity_catalog_skip_validation
+  unity_catalog_data_owner_group       = var.unity_catalog_data_owner_group
+  unity_catalog_create_metastore       = var.unity_catalog_create_metastore
+  unity_catalog_metastore_id           = var.unity_catalog_metastore_id
+  unity_catalog_data_access_is_default = var.unity_catalog_data_access_is_default
 
   additional_tags = var.additional_tags
 }

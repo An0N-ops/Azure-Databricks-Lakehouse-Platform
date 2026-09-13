@@ -1,0 +1,5 @@
+databricks_account_id = "00000000-0000-0000-0000-000000000000"
+databricks_auth_type  = "azure-cli"
+
+project_name = "lakehouse"
+location     = "eastus2"

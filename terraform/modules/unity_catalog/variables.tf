@@ -68,6 +68,29 @@ variable "force_destroy" {
   default     = false
 }
 
+variable "create_metastore" {
+  type        = bool
+  description = "Create a dedicated metastore in this stack. Set false to attach to the shared metastore via metastore_id."
+  default     = true
+}
+
+variable "metastore_id" {
+  type        = string
+  description = "Existing shared metastore ID. Required when create_metastore=false."
+  default     = ""
+
+  validation {
+    condition     = var.create_metastore || var.metastore_id != ""
+    error_message = "metastore_id must be set when create_metastore=false."
+  }
+}
+
+variable "metastore_data_access_is_default" {
+  type        = bool
+  description = "Mark this stack's data access as the metastore default. Only one default may exist; set false in envs when using the shared metastore."
+  default     = true
+}
+
 variable "skip_validation" {
   type        = bool
   description = "Skip Databricks validation of the storage credential; required when role propagation lags access connector creation."

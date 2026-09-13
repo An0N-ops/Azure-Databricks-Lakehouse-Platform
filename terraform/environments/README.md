@@ -1,12 +1,36 @@
 # Terraform Environment Targets
 
-Each directory under `terraform/environments/` represents an isolated platform lifecycle target. All targets consume the same reusable modules from `terraform/modules/`; only parameter values differ.
+Each directory under `terraform/environments/` represents an isolated platform lifecycle target. `dev`/`qa`/`prod` consume the same reusable modules from `terraform/modules/`; only parameter values differ. `shared` holds region-level singletons (currently the Unity Catalog metastore).
 
 | Target | Catalog | Replication | Guardrails |
 | ------ | ------- | ----------- | ---------- |
+| `shared` | — (metastore only) | — | Deploy first; one per region |
 | `dev` | `dev_lakehouse` | LRS | Fast iteration, relaxed validation |
 | `qa`  | `qa_lakehouse`  | ZRS | Production-parity data, staged promotion |
 | `prod`| `prod_lakehouse`| GRS | Strictest controls, no teardown |
+
+## Unity Catalog topology
+
+One regional metastore (`shared` stack, `lakehouse-shared-metastore`) serves all environments; each environment keeps its own storage credential, external locations, catalog (`<env>_lakehouse`) and `bronze`/`silver`/`gold` schemas. Only **one** `databricks_metastore_data_access` may be default per metastore — keep `unity_catalog_data_access_is_default=true` in exactly one environment (prod recommended).
+
+New environments default to the legacy per-env metastore (`unity_catalog_create_metastore=true`) so existing state is untouched. To adopt the shared metastore:
+
+```bash
+cd terraform/environments/shared
+cp backend.tf.example backend.tf
+cp terraform.tfvars.example terraform.tfvars
+terraform init && terraform apply  # note metastore_id output
+```
+
+Then in each of `dev`/`qa`/`prod` set:
+
+```hcl
+unity_catalog_create_metastore       = false
+unity_catalog_metastore_id           = "<shared metastore_id>"
+unity_catalog_data_access_is_default = false # true in exactly one env
+```
+
+> Migrating an already-deployed environment requires detaching its workspace from the old metastore first (`terraform state` surgery: `state rm` the old `databricks_metastore` + `metastore_assignment`, then import/attach). Plan this as a maintenance window; do not flip the flag on live state without a `plan` review.
 
 ## Structure
 
